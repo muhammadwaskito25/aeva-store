@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button"
 import { formatPrice } from "@/lib/products"
 import { fetchFeaturedProducts } from "@/lib/products.repository"
 
-const shippingFee = 18
+/** Ongkir contoh dalam Rupiah — sesuaikan di sini. */
+const shippingFee = 25_000
 
 export default async function CheckoutPage() {
   const products = await fetchFeaturedProducts()

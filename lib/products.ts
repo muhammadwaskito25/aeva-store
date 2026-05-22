@@ -23,8 +23,14 @@ export function getProductHref(slug: string): ProductHref {
   return `/products/${slug}`
 }
 
+/** Format angka sebagai Rupiah Indonesia (IDR). */
 export function formatPrice(price: number): string {
-  return `$${price}`
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price)
 }
 
 export function formatCategory(category: ProductCategory): string {
