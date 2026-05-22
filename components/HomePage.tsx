@@ -131,15 +131,9 @@ export function HomePage({ featuredProducts }: HomePageProps) {
             Elevated scarves crafted with refined textures and soft neutral
             tones. Designed for modern, minimal wardrobes.
           </p>
-          <div className="flex flex-wrap items-center gap-3 pt-2">
+          <div className="pt-2">
             <Button className="bg-neutral-900 px-7 text-[11px] tracking-[0.14em] text-white hover:bg-neutral-800">
               Discover Collection
-            </Button>
-            <Button
-              variant="outline"
-              className="border-black/15 bg-white px-7 text-[11px] tracking-[0.14em]"
-            >
-              Lookbook
             </Button>
           </div>
         </div>
@@ -155,12 +149,9 @@ export function HomePage({ featuredProducts }: HomePageProps) {
               className="object-cover"
             />
           </div>
-          <div className="absolute bottom-6 left-6 z-10 border border-black/10 bg-white/90 px-4 py-3 backdrop-blur">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-neutral-500">
-              
-            </p>
-            <p className="mt-1 text-sm">Solids Series</p>
-          </div>
+          <p className="absolute bottom-6 left-6 z-10 font-sans text-sm font-semibold tracking-[0.28em] text-white uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)] sm:text-base md:text-lg">
+            Solids Series
+          </p>
         </div>
       </section>
 
