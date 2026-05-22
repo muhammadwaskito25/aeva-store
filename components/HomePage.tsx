@@ -120,7 +120,7 @@ export function HomePage({ featuredProducts }: HomePageProps) {
       <section className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 sm:px-6 sm:py-14 md:grid-cols-2 md:items-center md:py-20">
         <div className="space-y-6">
           <p className="text-[11px] uppercase tracking-[0.22em] text-neutral-600">
-            Korean / Japanese Inspired Luxury
+        
           </p>
           <h1 className="font-heading text-4xl leading-tight sm:text-5xl md:text-6xl">
             Quiet Luxury
@@ -144,13 +144,22 @@ export function HomePage({ featuredProducts }: HomePageProps) {
           </div>
         </div>
 
-        <div className="relative overflow-hidden border border-black/10 bg-[#efe9df] p-6 sm:p-8">
-          <div className="aspect-[4/5] w-full bg-[linear-gradient(160deg,#f3ede3_0%,#e9dece_100%)]" />
-          <div className="absolute bottom-6 left-6 border border-black/10 bg-white/90 px-4 py-3 backdrop-blur">
+        <div className="relative overflow-hidden border border-black/10 bg-[#efe9df]">
+          <div className="relative aspect-[4/5] w-full">
+            <Image
+              src="/hero.png"
+              alt="Spring Beige Edit — AEVA signature drop"
+              fill
+              priority
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover"
+            />
+          </div>
+          <div className="absolute bottom-6 left-6 z-10 border border-black/10 bg-white/90 px-4 py-3 backdrop-blur">
             <p className="text-[10px] uppercase tracking-[0.18em] text-neutral-500">
-              Signature Drop
+              
             </p>
-            <p className="mt-1 text-sm">Spring Beige Edit</p>
+            <p className="mt-1 text-sm">Solids Series</p>
           </div>
         </div>
       </section>
