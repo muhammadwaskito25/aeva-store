@@ -3,8 +3,11 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useMemo, useState } from "react"
+import { motion } from "framer-motion"
 
-import { BrandLogo } from "@/components/BrandLogo"
+import { FadeIn } from "@/components/FadeIn"
+import { Navbar } from "@/components/Navbar"
+import { fadeUp, staggerContainer } from "@/lib/motion"
 import { Button } from "@/components/ui/button"
 import { ProductCard } from "@/components/ProductCard"
 import {
@@ -23,22 +26,7 @@ import {
   getProductHref,
   getProductImageAlt,
 } from "@/lib/products"
-import { Menu, Minus, Plus, Star, Trash2 } from "lucide-react"
-
-const testimonials = [
-  {
-    quote:
-      "AEVA scarves feel incredibly refined. The fabric is light, graceful, and elevates every outfit.",
-    name: "Mina K.",
-    location: "Seoul",
-  },
-  {
-    quote:
-      "Minimal, elegant, and timeless. This is exactly the quiet luxury look I wanted.",
-    name: "Aiko T.",
-    location: "Tokyo",
-  },
-]
+import { Minus, Plus, Trash2 } from "lucide-react"
 
 type HomePageProps = {
   featuredProducts: Product[]
@@ -80,48 +68,21 @@ export function HomePage({ featuredProducts }: HomePageProps) {
   }
 
   const subtotal = useMemo(() => getCartSubtotal(cartItems), [cartItems])
+  const cartCount = useMemo(
+    () => cartItems.reduce((total, item) => total + item.quantity, 0),
+    [cartItems]
+  )
 
   return (
     <main className="min-h-screen bg-[#f8f5ef] text-neutral-900">
-      <header className="sticky top-0 z-50 border-b border-black/5 bg-[#f8f5ef]/90 backdrop-blur">
-        <nav className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
-          <button
-            aria-label="Open menu"
-            className="inline-flex h-10 w-10 items-center justify-center border border-black/10 bg-white/80 md:hidden"
-          >
-            <Menu className="h-4 w-4" />
-          </button>
+      <Navbar cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
 
-          <BrandLogo priority />
-
-          <div className="hidden items-center gap-8 text-xs tracking-[0.16em] uppercase md:flex">
-            <a href="#featured" className="hover:opacity-70 transition-opacity">
-              Featured
-            </a>
-            <a href="#stories" className="hover:opacity-70 transition-opacity">
-              Stories
-            </a>
-            <a href="#tiktok" className="hover:opacity-70 transition-opacity">
-              TikTok
-            </a>
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-black/15 bg-white/80 text-[11px] tracking-[0.14em]"
-            onClick={() => setIsCartOpen(true)}
-          >
-            Cart ({cartItems.reduce((total, item) => total + item.quantity, 0)})
-          </Button>
-        </nav>
-      </header>
-
-      <section className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 sm:px-6 sm:py-14 md:grid-cols-2 md:items-center md:py-20">
-        <div className="space-y-6">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-neutral-600">
-        
-          </p>
+      <section
+        id="home"
+        className="mx-auto grid w-full max-w-6xl scroll-mt-24 gap-6 px-4 py-10 sm:px-6 sm:py-14 md:grid-cols-2 md:items-center md:py-20"
+      >
+        <FadeIn inView={false} className="space-y-6">
+          <p className="text-[11px] uppercase tracking-[0.22em] text-neutral-600" />
           <h1 className="font-heading text-4xl leading-tight sm:text-5xl md:text-6xl">
             Quiet Luxury
             <br />
@@ -132,92 +93,85 @@ export function HomePage({ featuredProducts }: HomePageProps) {
             tones. Designed for modern, minimal wardrobes.
           </p>
           <div className="pt-2">
-            <Button className="bg-neutral-900 px-7 text-[11px] tracking-[0.14em] text-white hover:bg-neutral-800">
-              Discover Collection
+            <Button
+              asChild
+              className="bg-neutral-900 px-7 text-[11px] tracking-[0.14em] text-white transition-all duration-500 ease-out hover:bg-neutral-800 hover:opacity-90"
+            >
+              <a href="#collection">Discover Collection</a>
             </Button>
           </div>
-        </div>
+        </FadeIn>
 
-        <div className="relative overflow-hidden border border-black/10 bg-[#efe9df]">
-          <div className="relative aspect-[4/5] w-full">
+        <FadeIn inView={false} delay={0.12} className="group relative overflow-hidden border border-black/10 bg-[#efe9df]">
+          <div className="relative aspect-[4/5] w-full overflow-hidden">
             <Image
               src="/hero.png"
               alt="Spring Beige Edit — AEVA signature drop"
               fill
               priority
               sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
+              className="object-cover transition-all duration-700 ease-out group-hover:scale-[1.02] group-hover:opacity-95"
             />
           </div>
-          <p className="absolute bottom-6 left-6 z-10 font-sans text-sm font-semibold tracking-[0.28em] text-white uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)] sm:text-base md:text-lg">
+          <p className="absolute bottom-6 left-6 z-10 font-sans text-sm font-semibold tracking-[0.28em] text-white uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)] transition-opacity duration-500 ease-out sm:text-base md:text-lg">
             Solids Series
           </p>
-        </div>
+        </FadeIn>
       </section>
 
-      <section id="featured" className="border-y border-black/5 bg-[#fbf9f5]">
+      <section id="collection" className="scroll-mt-24 border-y border-black/5 bg-[#fbf9f5]">
         <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-          <div className="mb-8 flex items-end justify-between">
+          <FadeIn className="mb-8 flex items-end justify-between">
             <h2 className="font-heading text-2xl sm:text-3xl">Featured Pieces</h2>
             {featuredProducts.length > 0 && (
               <a
-                href="#featured"
-                className="text-[11px] uppercase tracking-[0.14em] text-neutral-600 hover:text-neutral-900"
+                href="#collection"
+                className="text-[11px] uppercase tracking-[0.14em] text-neutral-600 transition-all duration-500 ease-out hover:text-neutral-900 hover:opacity-80"
               >
                 View All
               </a>
             )}
-          </div>
+          </FadeIn>
 
           {featuredProducts.length === 0 ? (
-            <div className="border border-black/10 bg-white/80 px-6 py-12 text-center">
-              <p className="font-heading text-xl text-neutral-800">
-                Collection arriving soon
-              </p>
-              <p className="mt-2 text-sm text-neutral-600">
-                Our curated scarf edit is being prepared. Please check back shortly.
-              </p>
-            </div>
+            <FadeIn>
+              <div className="border border-black/10 bg-white/80 px-6 py-12 text-center">
+                <p className="font-heading text-xl text-neutral-800">
+                  Collection arriving soon
+                </p>
+                <p className="mt-2 text-sm text-neutral-600">
+                  Our curated scarf edit is being prepared. Please check back shortly.
+                </p>
+              </div>
+            </FadeIn>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {featuredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  href={getProductHref(product.slug)}
-                  imageSrc={product.image}
-                  imageAlt={getProductImageAlt(product)}
-                  title={product.title}
-                  price={formatPrice(product.price)}
-                  category={formatCategory(product.category)}
-                  onAddToCart={() => addToCart(product)}
-                />
+            <motion.div
+              className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-40px" }}
+            >
+              {featuredProducts.map((product, index) => (
+                <motion.div key={product.id} variants={fadeUp} custom={index}>
+                  <ProductCard
+                    href={getProductHref(product.slug)}
+                    imageSrc={product.image}
+                    imageAlt={getProductImageAlt(product)}
+                    title={product.title}
+                    price={formatPrice(product.price)}
+                    category={formatCategory(product.category)}
+                    onAddToCart={() => addToCart(product)}
+                  />
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
         </div>
       </section>
 
-      <section id="stories" className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-        <h2 className="font-heading text-2xl sm:text-3xl">Client Notes</h2>
-        <div className="mt-8 grid gap-4 md:grid-cols-2">
-          {testimonials.map((item) => (
-            <article key={item.name} className="border border-black/10 bg-white p-6">
-              <div className="mb-4 flex gap-1 text-amber-500">
-                {Array.from({ length: 5 }).map((_, idx) => (
-                  <Star key={idx} className="h-3.5 w-3.5 fill-current" />
-                ))}
-              </div>
-              <p className="text-sm leading-relaxed text-neutral-700">“{item.quote}”</p>
-              <p className="mt-5 text-xs uppercase tracking-[0.14em] text-neutral-500">
-                {item.name} · {item.location}
-              </p>
-            </article>
-          ))}
-        </div>
-      </section>
-
       <section id="tiktok" className="border-y border-black/5 bg-[#f3ede3]">
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-start gap-4 px-4 py-12 sm:px-6 sm:py-16 md:flex-row md:items-center md:justify-between">
+        <FadeIn className="mx-auto flex w-full max-w-6xl flex-col items-start gap-4 px-4 py-12 sm:px-6 sm:py-16 md:flex-row md:items-center md:justify-between">
           <div className="space-y-2">
             <p className="text-[11px] uppercase tracking-[0.2em] text-neutral-600">
               Follow on TikTok
@@ -229,23 +183,26 @@ export function HomePage({ featuredProducts }: HomePageProps) {
               See daily draping ideas and capsule outfit pairings.
             </p>
           </div>
-          <Button className="bg-neutral-900 px-7 text-[11px] tracking-[0.14em] text-white hover:bg-neutral-800">
+          <Button className="bg-neutral-900 px-7 text-[11px] tracking-[0.14em] text-white transition-all duration-500 ease-out hover:bg-neutral-800 hover:opacity-90">
             @aevascarves
           </Button>
-        </div>
+        </FadeIn>
       </section>
 
       <footer className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
-        <div className="flex flex-col gap-6 border-t border-black/10 pt-6 md:flex-row md:items-center md:justify-between">
-          <p className="font-heading text-base tracking-[0.14em]">AEVA</p>
-          <div className="flex flex-wrap gap-5 text-[11px] uppercase tracking-[0.14em] text-neutral-600">
-            <a href="#" className="hover:text-neutral-900">Shipping</a>
-            <a href="#" className="hover:text-neutral-900">Care Guide</a>
-            <a href="#" className="hover:text-neutral-900">Instagram</a>
-            <a href="#" className="hover:text-neutral-900">TikTok</a>
+        <FadeIn>
+          <div className="flex flex-col gap-6 border-t border-black/10 pt-6 md:flex-row md:items-center md:justify-between">
+            <p className="font-heading text-base tracking-[0.14em]">AEVA</p>
+            <div className="flex flex-wrap gap-5 text-[11px] uppercase tracking-[0.14em] text-neutral-600">
+              <Link href="/about" className="transition-all duration-500 ease-out hover:text-neutral-900 hover:opacity-80">About</Link>
+              <a href="#" className="transition-all duration-500 ease-out hover:text-neutral-900 hover:opacity-80">Shipping</a>
+              <a href="#" className="transition-all duration-500 ease-out hover:text-neutral-900 hover:opacity-80">Care Guide</a>
+              <a href="#" className="transition-all duration-500 ease-out hover:text-neutral-900 hover:opacity-80">Instagram</a>
+              <a href="#" className="transition-all duration-500 ease-out hover:text-neutral-900 hover:opacity-80">TikTok</a>
+            </div>
+            <p className="text-xs text-neutral-500">© 2026 AEVA Scarves</p>
           </div>
-          <p className="text-xs text-neutral-500">© 2026 AEVA Scarves</p>
-        </div>
+        </FadeIn>
       </footer>
 
       <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>

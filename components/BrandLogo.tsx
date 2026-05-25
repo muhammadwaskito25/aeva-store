@@ -19,7 +19,7 @@ export function BrandLogo({ className, priority = false }: BrandLogoProps) {
       aria-label="AEVA home"
       className={cn(
         "inline-flex shrink-0 items-center bg-transparent p-0",
-        "transition-opacity duration-300 hover:opacity-75",
+        "transition-all duration-500 ease-out hover:opacity-70",
         className
       )}
     >
