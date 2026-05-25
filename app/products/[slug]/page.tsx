@@ -3,7 +3,7 @@ import { notFound } from "next/navigation"
 
 import { BrandLogo } from "@/components/BrandLogo"
 import { Button } from "@/components/ui/button"
-import { formatPrice, getProductImageAlt } from "@/lib/products"
+import { formatCategory, formatPrice, getProductImageAlt } from "@/lib/products"
 import { fetchProductBySlug } from "@/lib/products.repository"
 
 export default async function ProductDetailPage({
@@ -28,7 +28,7 @@ export default async function ProductDetailPage({
 
       <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
         <p className="text-[11px] tracking-[0.16em] uppercase text-neutral-500">
-          AEVA / {product.category}
+          AEVA / {formatCategory(product.category)}
         </p>
 
         <div className="mt-5 grid gap-8 md:mt-8 md:grid-cols-2 md:gap-10">

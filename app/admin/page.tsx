@@ -451,7 +451,7 @@ export default function AdminPage() {
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, category: e.target.value }))
                 }
-                placeholder="silk"
+                placeholder="solids, silk, wool, ..."
                 required
               />
             </label>

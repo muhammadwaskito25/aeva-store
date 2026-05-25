@@ -1,5 +1,3 @@
-export type ProductCategory = "silk" | "cashmere-blend" | "wool"
-
 export type ProductHref = `/products/${string}`
 
 export type Product = {
@@ -9,7 +7,7 @@ export type Product = {
   description: string
   price: number
   image: string
-  category: ProductCategory
+  category: string
   sizes: string[]
   colors: string[]
   featured: boolean
@@ -33,10 +31,13 @@ export function formatPrice(price: number): string {
   }).format(price)
 }
 
-export function formatCategory(category: ProductCategory): string {
+/** Tampilan label kategori di UI (huruf kapital per kata). */
+export function formatCategory(category: string): string {
   return category
-    .split("-")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .trim()
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ")
 }
 

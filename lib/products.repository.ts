@@ -1,11 +1,5 @@
 import { createSupabaseClient, isSupabaseConfigured } from "@/lib/supabase"
-import type { Product, ProductCategory } from "@/lib/products"
-
-const PRODUCT_CATEGORIES: ProductCategory[] = [
-  "silk",
-  "cashmere-blend",
-  "wool",
-]
+import type { Product } from "@/lib/products"
 
 function normalizeStringArray(value: unknown): string[] {
   if (Array.isArray(value)) {
@@ -14,12 +8,9 @@ function normalizeStringArray(value: unknown): string[] {
   return []
 }
 
-function normalizeCategory(value: unknown): ProductCategory {
-  const category = String(value ?? "silk")
-  if (PRODUCT_CATEGORIES.includes(category as ProductCategory)) {
-    return category as ProductCategory
-  }
-  return "silk"
+function normalizeCategory(value: unknown): string {
+  const category = String(value ?? "").trim()
+  return category || "general"
 }
 
 export function mapProductRow(row: Record<string, unknown>): Product | null {
