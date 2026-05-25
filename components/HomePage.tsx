@@ -7,6 +7,7 @@ import { motion } from "framer-motion"
 
 import { FadeIn } from "@/components/FadeIn"
 import { Navbar } from "@/components/Navbar"
+import { SiteFooter } from "@/components/SiteFooter"
 import { fadeUp, staggerContainer } from "@/lib/motion"
 import { Button } from "@/components/ui/button"
 import { ProductCard } from "@/components/ProductCard"
@@ -189,21 +190,9 @@ export function HomePage({ featuredProducts }: HomePageProps) {
         </FadeIn>
       </section>
 
-      <footer className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
-        <FadeIn>
-          <div className="flex flex-col gap-6 border-t border-black/10 pt-6 md:flex-row md:items-center md:justify-between">
-            <p className="font-heading text-base tracking-[0.14em]">AEVA</p>
-            <div className="flex flex-wrap gap-5 text-[11px] uppercase tracking-[0.14em] text-neutral-600">
-              <Link href="/about" className="transition-all duration-500 ease-out hover:text-neutral-900 hover:opacity-80">About</Link>
-              <a href="#" className="transition-all duration-500 ease-out hover:text-neutral-900 hover:opacity-80">Shipping</a>
-              <a href="#" className="transition-all duration-500 ease-out hover:text-neutral-900 hover:opacity-80">Care Guide</a>
-              <a href="#" className="transition-all duration-500 ease-out hover:text-neutral-900 hover:opacity-80">Instagram</a>
-              <a href="#" className="transition-all duration-500 ease-out hover:text-neutral-900 hover:opacity-80">TikTok</a>
-            </div>
-            <p className="text-xs text-neutral-500">© 2026 AEVA Scarves</p>
-          </div>
-        </FadeIn>
-      </footer>
+      <FadeIn>
+        <SiteFooter />
+      </FadeIn>
 
       <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
         <SheetContent>

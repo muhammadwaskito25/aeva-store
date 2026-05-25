@@ -8,6 +8,7 @@ import { Feather, Sparkles, Sun } from "lucide-react"
 
 import { FadeIn } from "@/components/FadeIn"
 import { Navbar } from "@/components/Navbar"
+import { SiteFooter } from "@/components/SiteFooter"
 import { Button } from "@/components/ui/button"
 import { fadeUp, luxuryEase, staggerContainer } from "@/lib/motion"
 import { cn } from "@/lib/utils"
@@ -346,32 +347,7 @@ export function AboutPage() {
         </FadeIn>
       </section>
 
-      <footer className="mx-auto w-full max-w-6xl border-t border-black/10 px-5 py-10 sm:px-8 lg:px-10">
-        <div className="flex flex-col gap-6 pt-6 md:flex-row md:items-center md:justify-between">
-          <p className="font-heading text-base tracking-[0.14em]">AÉVA</p>
-          <div className="flex flex-wrap gap-5 text-[11px] uppercase tracking-[0.14em] text-neutral-600">
-            <Link
-              href="/"
-              className="transition-all duration-500 ease-out hover:text-neutral-900 hover:opacity-80"
-            >
-              Home
-            </Link>
-            <Link
-              href="/#collection"
-              className="transition-all duration-500 ease-out hover:text-neutral-900 hover:opacity-80"
-            >
-              Collection
-            </Link>
-            <a
-              href="#"
-              className="transition-all duration-500 ease-out hover:text-neutral-900 hover:opacity-80"
-            >
-              Instagram
-            </a>
-          </div>
-          <p className="text-xs text-neutral-500">© 2026 AÉVA</p>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   )
 }
