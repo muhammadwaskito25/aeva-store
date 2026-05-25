@@ -49,6 +49,27 @@ function slugify(value: string) {
     .replace(/^-+|-+$/g, "")
 }
 
+/** Supabase/PostgREST errors carry message, code, details, hint */
+function formatError(err: unknown, fallback: string): string {
+  console.error("[admin]", err)
+
+  if (err && typeof err === "object") {
+    const e = err as {
+      message?: string
+      code?: string
+      details?: string
+      hint?: string
+    }
+    const parts = [e.message, e.details, e.hint, e.code ? `(${e.code})` : ""].filter(
+      Boolean
+    )
+    if (parts.length > 0) return parts.join(" — ")
+  }
+
+  if (err instanceof Error && err.message) return err.message
+  return fallback
+}
+
 function mapRow(row: Record<string, unknown>): AdminProduct | null {
   const id = row.id != null ? String(row.id) : ""
   const title = row.title != null ? String(row.title) : ""
@@ -83,6 +104,7 @@ export default function AdminPage() {
   const [products, setProducts] = useState<AdminProduct[]>([])
   const [form, setForm] = useState<ProductFormState>(emptyForm)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [slugTouched, setSlugTouched] = useState(false)
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [loading, setLoading] = useState(true)
@@ -120,7 +142,7 @@ export default function AdminPage() {
 
       setProducts(mapped)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal memuat produk.")
+      setError(formatError(err, "Gagal memuat produk."))
     } finally {
       setLoading(false)
     }
@@ -128,7 +150,7 @@ export default function AdminPage() {
 
   const parseForm = () => {
     const title = form.title.trim()
-    const slug = (form.slug.trim() || slugify(title)).trim()
+    const slug = slugify(form.slug.trim() || title)
     const price = Number(form.price)
     const image = form.image.trim()
     const category = form.category.trim()
@@ -150,20 +172,16 @@ export default function AdminPage() {
     try {
       const payload = parseForm()
       const supabase = createSupabaseBrowserClient()
-      const { error: insertError } = await supabase.from("products").insert({
-        ...payload,
-        sizes: [],
-        colors: [],
-        featured: true,
-      })
+      const { error: insertError } = await supabase.from("products").insert(payload)
 
       if (insertError) throw insertError
 
       setForm(emptyForm)
+      setSlugTouched(false)
       setMessage("Produk berhasil ditambahkan.")
       await fetchProducts()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menambah produk.")
+      setError(formatError(err, "Gagal menambah produk."))
     } finally {
       setSubmitting(false)
     }
@@ -189,10 +207,11 @@ export default function AdminPage() {
 
       setForm(emptyForm)
       setEditingId(null)
+      setSlugTouched(false)
       setMessage("Produk berhasil diperbarui.")
       await fetchProducts()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal memperbarui produk.")
+      setError(formatError(err, "Gagal memperbarui produk."))
     } finally {
       setSubmitting(false)
     }
@@ -223,7 +242,7 @@ export default function AdminPage() {
       setMessage("Produk dihapus.")
       await fetchProducts()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menghapus produk.")
+      setError(formatError(err, "Gagal menghapus produk."))
     } finally {
       setDeletingId(null)
     }
@@ -231,6 +250,7 @@ export default function AdminPage() {
 
   const startEdit = (product: AdminProduct) => {
     setEditingId(product.id)
+    setSlugTouched(true)
     setForm(productToForm(product))
     setError(null)
     setMessage(null)
@@ -240,6 +260,7 @@ export default function AdminPage() {
   const cancelEdit = () => {
     setEditingId(null)
     setForm(emptyForm)
+    setSlugTouched(false)
   }
 
   const handleLogout = async () => {
@@ -350,7 +371,10 @@ export default function AdminPage() {
                   setForm((prev) => ({
                     ...prev,
                     title,
-                    slug: isEditing ? prev.slug : prev.slug || slugify(title),
+                    slug:
+                      isEditing || slugTouched
+                        ? prev.slug
+                        : slugify(title) || prev.slug,
                   }))
                 }}
                 placeholder="Han River Silk"
@@ -365,12 +389,24 @@ export default function AdminPage() {
               <input
                 className={inputClassName}
                 value={form.slug}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, slug: slugify(e.target.value) }))
+                onChange={(e) => {
+                  setSlugTouched(true)
+                  setForm((prev) => ({ ...prev, slug: e.target.value }))
+                }}
+                onBlur={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    slug: slugify(e.target.value) || prev.slug,
+                  }))
                 }
-                placeholder="han-river-silk"
+                placeholder="han-river-silk atau scarf-4"
                 required
               />
+              <p className="text-xs text-neutral-500">
+                Boleh huruf, angka, spasi. Saat simpan, spasi jadi strip (-), mis.{" "}
+                <span className="font-mono">scarf 4</span> →{" "}
+                <span className="font-mono">scarf-4</span>
+              </p>
             </label>
 
             <label className="block space-y-2">
