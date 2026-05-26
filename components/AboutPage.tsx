@@ -118,32 +118,32 @@ export function AboutPage() {
       <Navbar cartCount={0} onCartClick={() => router.push("/")} />
 
       {/* SECTION 1 — HERO */}
-      <section className="relative min-h-[72vh] overflow-hidden sm:min-h-[80vh] lg:min-h-[88vh]">
-        <Image
-          src="/about.png"
-          alt="AÉVA — quiet elegance editorial"
-          fill
-          priority
-          className="object-cover object-[center_30%] sm:object-center"
-          sizes="100vw"
-        />
-        <div
-          className="absolute inset-0 bg-gradient-to-b from-[#f8f5ef]/55 via-[#f8f5ef]/72 to-[#f8f5ef]"
-          aria-hidden
-        />
-        <div className="absolute inset-0 bg-neutral-900/[0.08]" aria-hidden />
+      <section className="bg-[#f8f5ef]">
+        <div className="relative h-[52vh] min-h-[320px] w-full sm:h-[58vh] lg:h-[65vh]">
+          <Image
+            src="/about1.jpg"
+            alt="AÉVA — quiet elegance editorial"
+            fill
+            priority
+            className="object-cover object-[50%_42%] sm:object-[50%_38%]"
+            sizes="100vw"
+          />
+        </div>
 
-        <div className="relative mx-auto flex min-h-[72vh] w-full max-w-6xl flex-col justify-end px-4 pb-14 pt-28 sm:min-h-[80vh] sm:px-8 sm:pb-24 sm:pt-32 lg:min-h-[88vh] lg:pb-28 lg:px-10">
-          <FadeIn inView={false} className="max-w-3xl space-y-4 sm:space-y-6">
-            <p className="text-[10px] font-medium tracking-[0.26em] uppercase text-neutral-600 sm:text-[11px] sm:tracking-[0.28em]">
+        <div className="border-t border-black/[0.06] bg-[#f8f5ef]">
+          <FadeIn
+            inView={false}
+            className="mx-auto w-full max-w-6xl px-5 py-12 sm:px-8 sm:py-16 lg:px-10 lg:py-20"
+          >
+            <p className="text-[11px] font-medium tracking-[0.3em] text-neutral-500 uppercase">
               Brand Story
             </p>
-            <h1 className="font-heading text-[2.125rem] leading-[1.06] tracking-tight text-neutral-900 sm:text-6xl md:text-7xl">
+            <h1 className="mt-5 max-w-4xl font-heading text-[2.25rem] leading-[1.08] tracking-tight text-neutral-900 sm:mt-6 sm:text-5xl lg:text-7xl lg:leading-[1.05]">
               Crafted for
               <br />
               Quiet Elegance
             </h1>
-            <p className="max-w-xl text-sm leading-relaxed text-neutral-700 sm:text-lg">
+            <p className="mt-6 max-w-lg text-[15px] leading-[1.75] text-neutral-600 sm:mt-8 sm:text-base sm:leading-relaxed">
               AÉVA creates refined modestwear designed for modern women who
               value softness, simplicity, and timeless silhouettes.
             </p>
