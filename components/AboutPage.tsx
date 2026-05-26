@@ -39,7 +39,7 @@ const lookbookImages = [
     src: "/hero.png",
     alt: "AÉVA editorial — neutral tones",
     className: "md:col-span-7 md:row-span-2",
-    aspect: "aspect-[4/5] md:aspect-auto md:min-h-[520px]",
+    aspect: "aspect-[4/5] min-h-[280px] md:aspect-auto md:min-h-[520px]",
   },
   {
     src: "/products/scarf1.png",
@@ -100,7 +100,7 @@ function EditorialImage({
         alt={alt}
         fill
         priority={priority}
-        sizes="(max-width: 768px) 100vw, 50vw"
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         className={cn(
           "object-cover transition-all duration-700 ease-out",
           !reduceMotion && "group-hover:scale-[1.03] group-hover:opacity-95"
@@ -114,17 +114,17 @@ export function AboutPage() {
   const router = useRouter()
 
   return (
-    <main className="min-h-screen bg-[#f8f5ef] text-neutral-900">
+    <main className="min-h-screen overflow-x-hidden bg-[#f8f5ef] text-neutral-900">
       <Navbar cartCount={0} onCartClick={() => router.push("/")} />
 
       {/* SECTION 1 — HERO */}
-      <section className="relative min-h-[88vh] overflow-hidden">
+      <section className="relative min-h-[72vh] overflow-hidden sm:min-h-[80vh] lg:min-h-[88vh]">
         <Image
           src="/about.png"
           alt="AÉVA — quiet elegance editorial"
           fill
           priority
-          className="object-cover object-center"
+          className="object-cover object-[center_30%] sm:object-center"
           sizes="100vw"
         />
         <div
@@ -133,17 +133,17 @@ export function AboutPage() {
         />
         <div className="absolute inset-0 bg-neutral-900/[0.08]" aria-hidden />
 
-        <div className="relative mx-auto flex min-h-[88vh] w-full max-w-6xl flex-col justify-end px-5 pb-20 pt-32 sm:px-8 sm:pb-28 lg:px-10">
-          <FadeIn inView={false} className="max-w-3xl space-y-6">
-            <p className="text-[11px] font-medium tracking-[0.28em] uppercase text-neutral-600">
-              Our Story
+        <div className="relative mx-auto flex min-h-[72vh] w-full max-w-6xl flex-col justify-end px-4 pb-14 pt-28 sm:min-h-[80vh] sm:px-8 sm:pb-24 sm:pt-32 lg:min-h-[88vh] lg:pb-28 lg:px-10">
+          <FadeIn inView={false} className="max-w-3xl space-y-4 sm:space-y-6">
+            <p className="text-[10px] font-medium tracking-[0.26em] uppercase text-neutral-600 sm:text-[11px] sm:tracking-[0.28em]">
+              Brand Story
             </p>
-            <h1 className="font-heading text-[2.75rem] leading-[1.05] tracking-tight text-neutral-900 sm:text-6xl md:text-7xl">
+            <h1 className="font-heading text-[2.125rem] leading-[1.06] tracking-tight text-neutral-900 sm:text-6xl md:text-7xl">
               Crafted for
               <br />
               Quiet Elegance
             </h1>
-            <p className="max-w-xl text-base leading-relaxed text-neutral-700 sm:text-lg">
+            <p className="max-w-xl text-sm leading-relaxed text-neutral-700 sm:text-lg">
               AÉVA creates refined modestwear designed for modern women who
               value softness, simplicity, and timeless silhouettes.
             </p>
@@ -153,11 +153,11 @@ export function AboutPage() {
 
       {/* SECTION 2 — BRAND STORY */}
       <section className="border-t border-black/[0.05] bg-[#f8f5ef]">
-        <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-2 lg:items-center lg:gap-16 lg:px-10">
+        <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-14 sm:gap-12 sm:px-8 sm:py-28 lg:grid-cols-2 lg:items-center lg:gap-16 lg:px-10">
           <FadeIn className="relative order-2 lg:order-1">
             <div className="relative aspect-[4/5] overflow-hidden bg-[#ebe6dc]">
               <Image
-                src="/products/scarf2.png"
+                src="/about.png"
                 alt="AÉVA scarf — refined neutral palette"
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -169,12 +169,12 @@ export function AboutPage() {
             </p>
           </FadeIn>
 
-          <FadeIn delay={0.1} className="order-1 space-y-8 lg:order-2">
-            <div className="space-y-3">
-              <p className="text-[11px] tracking-[0.24em] uppercase text-neutral-500">
-                Philosophy
+          <FadeIn delay={0.1} className="order-1 space-y-6 sm:space-y-8 lg:order-2">
+            <div className="space-y-2 sm:space-y-3">
+              <p className="text-[10px] tracking-[0.22em] uppercase text-neutral-500 sm:text-[11px] sm:tracking-[0.24em]">
+                Philosophy &amp; Craft
               </p>
-              <h2 className="font-heading text-3xl tracking-tight sm:text-4xl">
+              <h2 className="font-heading text-2xl tracking-tight sm:text-4xl">
                 An effortless presence
               </h2>
             </div>
@@ -198,18 +198,18 @@ export function AboutPage() {
 
       {/* SECTION 3 — VALUES */}
       <section className="border-y border-black/[0.05] bg-[#fbf9f5]">
-        <div className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8 sm:py-28 lg:px-10">
-          <FadeIn className="mb-14 max-w-xl space-y-3">
+        <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-8 sm:py-28 lg:px-10">
+          <FadeIn className="mb-10 max-w-xl space-y-2 sm:mb-14 sm:space-y-3">
             <p className="text-[11px] tracking-[0.24em] uppercase text-neutral-500">
               What we stand for
             </p>
-            <h2 className="font-heading text-3xl tracking-tight sm:text-4xl">
-              The AÉVA values
+            <h2 className="font-heading text-2xl tracking-tight sm:text-4xl">
+              Minimal luxury
             </h2>
           </FadeIn>
 
           <motion.div
-            className="grid gap-6 md:grid-cols-3"
+            className="grid gap-4 sm:gap-6 md:grid-cols-3"
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
@@ -221,7 +221,7 @@ export function AboutPage() {
                 variants={fadeUp}
                 whileHover={{ y: -4 }}
                 transition={{ duration: 0.55, ease: luxuryEase }}
-                className="group border border-black/[0.08] bg-white/60 p-8 transition-all duration-700 ease-out hover:border-black/[0.12] hover:bg-white hover:shadow-[0_20px_50px_-32px_rgba(0,0,0,0.18)]"
+                className="group border border-black/[0.08] bg-white/60 p-6 transition-all duration-700 ease-out sm:p-8 md:hover:border-black/[0.12] md:hover:bg-white md:hover:shadow-[0_20px_50px_-32px_rgba(0,0,0,0.18)]"
               >
                 <item.icon
                   className="mb-6 size-5 stroke-[1.25] text-neutral-700 transition-colors duration-500 ease-out group-hover:text-neutral-900"
@@ -241,13 +241,13 @@ export function AboutPage() {
 
       {/* SECTION 4 — LOOKBOOK */}
       <section className="bg-[#f8f5ef]">
-        <div className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8 sm:py-28 lg:px-10">
-          <FadeIn className="mb-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-8 sm:py-28 lg:px-10">
+          <FadeIn className="mb-8 flex flex-col gap-3 sm:mb-12 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
             <div className="space-y-3">
               <p className="text-[11px] tracking-[0.24em] uppercase text-neutral-500">
                 Lookbook
               </p>
-              <h2 className="font-heading text-3xl tracking-tight sm:text-4xl">
+              <h2 className="font-heading text-2xl tracking-tight sm:text-4xl">
                 Lifestyle &amp; form
               </h2>
             </div>
@@ -258,7 +258,7 @@ export function AboutPage() {
           </FadeIn>
 
           <motion.div
-            className="grid gap-4 md:grid-cols-12 md:grid-rows-2"
+            className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-12 md:grid-rows-2"
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
@@ -280,7 +280,7 @@ export function AboutPage() {
 
       {/* SECTION 5 — CLIENT NOTES */}
       <section className="border-t border-black/[0.05] bg-[#f3ede3]/50">
-        <div className="mx-auto w-full max-w-6xl px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-8 sm:py-20 lg:px-10">
           <FadeIn className="mb-10 space-y-2 text-center">
             <p className="text-[11px] tracking-[0.24em] uppercase text-neutral-500">
               Client Notes
@@ -317,11 +317,11 @@ export function AboutPage() {
 
       {/* SECTION 6 — CTA */}
       <section className="border-t border-black/[0.05] bg-[#f8f5ef]">
-        <FadeIn className="mx-auto flex w-full max-w-6xl flex-col items-center px-5 py-24 text-center sm:px-8 sm:py-32 lg:px-10">
+        <FadeIn className="mx-auto flex w-full max-w-6xl flex-col items-center px-4 py-16 text-center sm:px-8 sm:py-32 lg:px-10">
           <p className="text-[11px] tracking-[0.28em] uppercase text-neutral-500">
             The Collection
           </p>
-          <h2 className="mt-4 font-heading text-3xl tracking-tight sm:text-5xl">
+          <h2 className="mt-4 font-heading text-2xl tracking-tight sm:text-5xl">
             Discover the Collection
           </h2>
           <p className="mt-4 max-w-md text-sm leading-relaxed text-neutral-600">

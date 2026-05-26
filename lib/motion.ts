@@ -9,7 +9,7 @@ export const transition = {
 } as const
 
 export const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 14 },
   visible: {
     opacity: 1,
     y: 0,
@@ -37,15 +37,15 @@ export const staggerContainer = {
 }
 
 export const pageTransition = {
-  initial: { opacity: 0, y: 12 },
+  initial: { opacity: 0, y: 6 },
   animate: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.55, ease: luxuryEase },
+    transition: { duration: 0.5, ease: luxuryEase },
   },
   exit: {
     opacity: 0,
-    y: -8,
-    transition: { duration: 0.45, ease: luxuryEase },
+    y: -4,
+    transition: { duration: 0.4, ease: luxuryEase },
   },
 }

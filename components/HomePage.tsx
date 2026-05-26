@@ -75,16 +75,18 @@ export function HomePage({ featuredProducts }: HomePageProps) {
   )
 
   return (
-    <main className="min-h-screen bg-[#f8f5ef] text-neutral-900">
+    <main className="min-h-screen overflow-x-hidden bg-[#f8f5ef] text-neutral-900">
       <Navbar cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
 
       <section
         id="home"
-        className="mx-auto grid w-full max-w-6xl scroll-mt-24 gap-6 px-4 py-10 sm:px-6 sm:py-14 md:grid-cols-2 md:items-center md:py-20"
+        className="mx-auto grid w-full max-w-6xl scroll-mt-20 gap-8 px-4 py-8 sm:scroll-mt-24 sm:gap-6 sm:px-6 sm:py-14 md:grid-cols-2 md:items-center md:py-20"
       >
-        <FadeIn inView={false} className="space-y-6">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-neutral-600" />
-          <h1 className="font-heading text-4xl leading-tight sm:text-5xl md:text-6xl">
+        <FadeIn inView={false} className="order-2 space-y-4 sm:order-1 sm:space-y-6">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-neutral-600 sm:text-[11px]">
+            Spring Edit
+          </p>
+          <h1 className="font-heading text-[2rem] leading-[1.08] tracking-tight sm:text-5xl md:text-6xl">
             Quiet Luxury
             <br />
             in Every Fold
@@ -93,37 +95,41 @@ export function HomePage({ featuredProducts }: HomePageProps) {
             Elevated scarves crafted with refined textures and soft neutral
             tones. Designed for modern, minimal wardrobes.
           </p>
-          <div className="pt-2">
+          <div className="pt-1 sm:pt-2">
             <Button
               asChild
-              className="bg-neutral-900 px-7 text-[11px] tracking-[0.14em] text-white transition-all duration-500 ease-out hover:bg-neutral-800 hover:opacity-90"
+              className="h-11 w-full bg-neutral-900 px-7 text-[11px] tracking-[0.14em] text-white transition-all duration-500 ease-out hover:bg-neutral-800 hover:opacity-90 sm:h-10 sm:w-auto"
             >
               <a href="#collection">Discover Collection</a>
             </Button>
           </div>
         </FadeIn>
 
-        <FadeIn inView={false} delay={0.12} className="group relative overflow-hidden border border-black/10 bg-[#efe9df]">
-          <div className="relative aspect-[4/5] w-full overflow-hidden">
+        <FadeIn
+          inView={false}
+          delay={0.1}
+          className="order-1 group relative overflow-hidden border border-black/10 bg-[#efe9df] sm:order-2"
+        >
+          <div className="relative aspect-[5/6] w-full overflow-hidden sm:aspect-[4/5]">
             <Image
               src="/hero.png"
               alt="Spring Beige Edit — AEVA signature drop"
               fill
               priority
               sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover transition-all duration-700 ease-out group-hover:scale-[1.02] group-hover:opacity-95"
+              className="object-cover object-[center_20%] transition-all duration-700 ease-out md:group-hover:scale-[1.02] md:group-hover:opacity-95"
             />
           </div>
-          <p className="absolute bottom-6 left-6 z-10 font-sans text-sm font-semibold tracking-[0.28em] text-white uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)] transition-opacity duration-500 ease-out sm:text-base md:text-lg">
+          <p className="absolute bottom-4 left-4 z-10 text-xs font-semibold tracking-[0.24em] text-white uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)] sm:bottom-6 sm:left-6 sm:text-sm md:text-lg">
             Solids Series
           </p>
         </FadeIn>
       </section>
 
-      <section id="collection" className="scroll-mt-24 border-y border-black/5 bg-[#fbf9f5]">
-        <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-          <FadeIn className="mb-8 flex items-end justify-between">
-            <h2 className="font-heading text-2xl sm:text-3xl">Featured Pieces</h2>
+      <section id="collection" className="scroll-mt-20 border-y border-black/5 bg-[#fbf9f5] sm:scroll-mt-24">
+        <div className="mx-auto w-full max-w-6xl px-3 py-10 sm:px-6 sm:py-16">
+          <FadeIn className="mb-6 flex items-end justify-between gap-4 px-1 sm:mb-8 sm:px-0">
+            <h2 className="font-heading text-xl sm:text-3xl">Featured Pieces</h2>
             {featuredProducts.length > 0 && (
               <a
                 href="#collection"
@@ -147,7 +153,7 @@ export function HomePage({ featuredProducts }: HomePageProps) {
             </FadeIn>
           ) : (
             <motion.div
-              className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+              className="grid grid-cols-2 gap-2.5 sm:gap-4 xl:grid-cols-4"
               variants={staggerContainer}
               initial="hidden"
               whileInView="visible"
@@ -172,7 +178,7 @@ export function HomePage({ featuredProducts }: HomePageProps) {
       </section>
 
       <section id="tiktok" className="border-y border-black/5 bg-[#f3ede3]">
-        <FadeIn className="mx-auto flex w-full max-w-6xl flex-col items-start gap-4 px-4 py-12 sm:px-6 sm:py-16 md:flex-row md:items-center md:justify-between">
+        <FadeIn className="mx-auto flex w-full max-w-6xl flex-col items-start gap-5 px-4 py-10 text-left sm:gap-4 sm:px-6 sm:py-16 md:flex-row md:items-center md:justify-between">
           <div className="space-y-2">
             <p className="text-[11px] uppercase tracking-[0.2em] text-neutral-600">
               Follow on TikTok

@@ -125,7 +125,7 @@
     @apply font-sans scroll-smooth;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply overflow-x-hidden bg-background text-foreground;
   }
   @media (prefers-reduced-motion: reduce) {
     html {
