@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils"
 
 const footerLinks = [
   { label: "About", href: "/about", external: false },
-  { label: "Care Guide", href: "#", external: false },
   {
     label: "Instagram",
     href: "https://instagram.com/aevascarves",

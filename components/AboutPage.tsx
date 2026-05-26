@@ -120,8 +120,8 @@ export function AboutPage() {
       {/* SECTION 1 — HERO */}
       <section className="relative min-h-[88vh] overflow-hidden">
         <Image
-          src="/hero.png"
-          alt=""
+          src="/about.png"
+          alt="AÉVA — quiet elegance editorial"
           fill
           priority
           className="object-cover object-center"
@@ -175,25 +175,22 @@ export function AboutPage() {
                 Philosophy
               </p>
               <h2 className="font-heading text-3xl tracking-tight sm:text-4xl">
-                A study in softness
+                An effortless presence
               </h2>
             </div>
             <div className="space-y-5 text-sm leading-[1.85] text-neutral-700 sm:text-base">
               <p>
-                AÉVA was founded on the belief that modestwear can feel
-                cinematic without excess — that true luxury lives in proportion,
-                texture, and restraint.
+                AÉVA was born from a simple belief — that scarves should feel
+                timeless, effortless, and made for every woman. We wanted to
+                create pieces that are easy to wear, soft in presence, and
+                naturally elegant without feeling excessive.
               </p>
               <p>
-                We work in neutral tones and timeless shapes, drawing from quiet
-                luxury and editorial minimalism. Each piece is considered for
-                drape, comfort, and the way it settles into a modern wardrobe.
+                Through refined fabrics, neutral tones, and thoughtful
+                simplicity, each scarf is designed to become a part of everyday
+                moments — comfortable, versatile, and quietly beautiful.
               </p>
-              <p>
-                From refined fabrics to softened silhouettes, our collections
-                honour women who dress with intention — present, poised, and
-                beautifully understated.
-              </p>
+              <p>Made for every woman, every style, and every season.</p>
             </div>
           </FadeIn>
         </div>
