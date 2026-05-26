@@ -42,7 +42,7 @@ const lookbookImages = [
     aspect: "aspect-[4/5] min-h-[280px] md:aspect-auto md:min-h-[520px]",
   },
   {
-    src: "/products/scarf1.png",
+    src: "/about2.jpg",
     alt: "Silk drape detail",
     className: "md:col-span-5",
     aspect: "aspect-[5/4]",
@@ -120,7 +120,7 @@ export function AboutPage() {
       {/* SECTION 1 — HERO */}
       <section className="relative min-h-[78vh] overflow-hidden sm:min-h-[82vh] lg:min-h-[88vh]">
         <Image
-          src="/about2.jpg"
+          src="/achadita.jpg"
           alt="AÉVA — quiet elegance editorial"
           fill
           priority
