@@ -120,7 +120,7 @@ export function AboutPage() {
       {/* SECTION 1 — HERO */}
       <section className="relative min-h-[78vh] overflow-hidden sm:min-h-[82vh] lg:min-h-[88vh]">
         <Image
-          src="/achadita.jpg"
+          src="/about4.jpg"
           alt="AÉVA — quiet elegance editorial"
           fill
           priority
