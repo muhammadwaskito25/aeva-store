@@ -84,16 +84,16 @@ export function HomePage({ featuredProducts }: HomePageProps) {
       >
         <FadeIn inView={false} className="order-2 space-y-4 sm:order-1 sm:space-y-6">
           <p className="text-[10px] uppercase tracking-[0.22em] text-neutral-600 sm:text-[11px]">
-            Spring Edit
+            The Solids Series
           </p>
           <h1 className="font-heading text-[2rem] leading-[1.08] tracking-tight sm:text-5xl md:text-6xl">
-            Quiet Luxury
+            Pure Tones
             <br />
             in Every Fold
           </h1>
           <p className="max-w-md text-sm leading-relaxed text-neutral-700 sm:text-base">
-            Elevated scarves crafted with refined textures and soft neutral
-            tones. Designed for modern, minimal wardrobes.
+          Soft to the touch, striking in its drape. Our premium Viscose collection elevates the classic solid scarf, 
+          offering breathable comfort and a refined finish that moves beautifully with you.
           </p>
           <div className="pt-1 sm:pt-2">
             <Button
