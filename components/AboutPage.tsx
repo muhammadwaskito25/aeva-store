@@ -121,7 +121,7 @@ export function AboutPage() {
       <section className="bg-[#f8f5ef]">
         <div className="relative h-[52vh] min-h-[320px] w-full sm:h-[58vh] lg:h-[65vh]">
           <Image
-            src="/about1.jpg"
+            src="/about2.jpg"
             alt="AÉVA — quiet elegance editorial"
             fill
             priority
