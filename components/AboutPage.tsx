@@ -48,7 +48,7 @@ const lookbookImages = [
     aspect: "aspect-[5/4]",
   },
   {
-    src: "/products/scarf3.png",
+    src: "/about3.jpg",
     alt: "Soft fold styling",
     className: "md:col-span-5",
     aspect: "aspect-[5/4]",
