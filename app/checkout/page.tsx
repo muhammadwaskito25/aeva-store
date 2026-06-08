@@ -4,7 +4,6 @@ import {
   getMidtransSnapScriptUrl,
   isMidtransConfigured,
 } from "@/lib/midtrans"
-import { fetchFeaturedProducts } from "@/lib/products.repository"
 
 export const dynamic = "force-dynamic"
 
@@ -12,24 +11,6 @@ export const dynamic = "force-dynamic"
 const shippingFee = 25_000
 
 export default async function CheckoutPage() {
-  const products = await fetchFeaturedProducts()
-  const orderItems = products.slice(0, 2).map((product) => ({
-    id: product.id,
-    title: product.title,
-    detail:
-      product.colors[0] && product.sizes[0]
-        ? `${product.colors[0]} · ${product.sizes[0]}`
-        : product.category,
-    quantity: 1,
-    price: product.price,
-  }))
-
-  const subtotal = orderItems.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  )
-  const total = subtotal + shippingFee
-
   const midtransEnabled = isMidtransConfigured()
 
   return (
@@ -45,10 +26,7 @@ export default async function CheckoutPage() {
 
       <section className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 sm:px-6 sm:py-10 lg:grid-cols-[1fr_360px] lg:items-start lg:gap-10">
         <CheckoutForm
-          orderItems={orderItems}
-          subtotal={subtotal}
           shippingFee={shippingFee}
-          total={total}
           midtransEnabled={midtransEnabled}
           midtransClientKey={
             midtransEnabled

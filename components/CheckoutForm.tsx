@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { formatPrice } from "@/lib/products"
+import { useCart } from "@/lib/cart"
 
 export type CheckoutOrderItem = {
   id: string
@@ -15,10 +16,7 @@ export type CheckoutOrderItem = {
 }
 
 type CheckoutFormProps = {
-  orderItems: CheckoutOrderItem[]
-  subtotal: number
   shippingFee: number
-  total: number
   midtransClientKey: string | null
   midtransScriptUrl: string
   midtransEnabled: boolean
@@ -28,15 +26,29 @@ const inputClassName =
   "h-11 w-full border border-black/15 bg-[#fcfbf8] px-3 text-sm outline-none transition focus:border-black/30"
 
 export function CheckoutForm({
-  orderItems,
-  subtotal,
   shippingFee,
-  total,
   midtransClientKey,
   midtransScriptUrl,
   midtransEnabled,
 }: CheckoutFormProps) {
   const router = useRouter()
+  const { items: cartItems, subtotal, clearCart } = useCart()
+
+  const orderItems: CheckoutOrderItem[] = cartItems.map((item) => ({
+    id: item.id,
+    title: item.title,
+    detail:
+      item.selectedColor && item.selectedSize
+        ? `${item.selectedColor} · ${item.selectedSize}`
+        : item.colors?.[0] && item.sizes?.[0]
+        ? `${item.colors[0]} · ${item.sizes[0]}`
+        : item.category,
+    price: item.price,
+    quantity: item.quantity,
+  }))
+
+  const total = subtotal > 0 ? subtotal + shippingFee : 0
+
   const [isPaying, setIsPaying] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [snapReady, setSnapReady] = useState(false)
@@ -114,9 +126,11 @@ export function CheckoutForm({
 
       window.snap.pay(data.token, {
         onSuccess: () => {
+          clearCart()
           router.push("/checkout/success")
         },
         onPending: () => {
+          clearCart()
           router.push("/checkout/success?status=pending")
         },
         onError: () => {

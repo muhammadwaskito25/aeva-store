@@ -2,7 +2,6 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { motion, useReducedMotion } from "framer-motion"
 import { Feather, Sparkles, Sun } from "lucide-react"
 
@@ -111,11 +110,10 @@ function EditorialImage({
 }
 
 export function AboutPage() {
-  const router = useRouter()
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f8f5ef] text-neutral-900">
-      <Navbar cartCount={0} onCartClick={() => router.push("/")} />
+      <Navbar />
 
       {/* SECTION 1 — HERO */}
       <section className="relative min-h-[78vh] overflow-hidden sm:min-h-[82vh] lg:min-h-[88vh]">

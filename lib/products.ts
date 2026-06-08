@@ -15,6 +15,8 @@ export type Product = {
 
 export type CartItem = Product & {
   quantity: number
+  selectedSize?: string
+  selectedColor?: string
 }
 
 export function getProductHref(slug: string): ProductHref {

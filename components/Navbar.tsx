@@ -14,6 +14,7 @@ import { Menu, X } from "lucide-react"
 import { BrandLogo } from "@/components/BrandLogo"
 import { luxuryEase, transition } from "@/lib/motion"
 import { cn } from "@/lib/utils"
+import { useCart } from "@/lib/cart"
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -22,8 +23,7 @@ const navLinks = [
 ] as const
 
 type NavbarProps = {
-  cartCount: number
-  onCartClick: () => void
+  onCartClick?: () => void
 }
 
 function NavLink({
@@ -68,7 +68,8 @@ function NavLink({
   )
 }
 
-export function Navbar({ cartCount, onCartClick }: NavbarProps) {
+export function Navbar({ onCartClick }: NavbarProps) {
+  const { cartCount, openCart } = useCart()
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const reduceMotion = useReducedMotion()
@@ -169,7 +170,7 @@ export function Navbar({ cartCount, onCartClick }: NavbarProps) {
           <div className="flex items-center justify-end">
             <motion.button
               type="button"
-              onClick={onCartClick}
+              onClick={onCartClick || openCart}
               whileTap={reduceMotion ? undefined : { scale: 0.96 }}
               transition={transition.fast}
               className="group relative inline-flex min-h-11 items-center gap-2 py-1 text-[10px] font-medium tracking-[0.18em] uppercase text-neutral-800 transition-all duration-500 ease-out active:text-neutral-950 sm:gap-2.5 sm:text-[11px] sm:tracking-[0.2em]"
