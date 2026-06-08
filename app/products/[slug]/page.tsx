@@ -1,8 +1,8 @@
-import Image from "next/image"
 import { notFound } from "next/navigation"
 
 import { Navbar } from "@/components/Navbar"
 import { ProductDetailActions } from "@/components/ProductDetailActions"
+import { ProductGallery } from "@/components/ProductGallery"
 import { formatCategory, formatPrice, getProductImageAlt } from "@/lib/products"
 import { fetchProductBySlug } from "@/lib/products.repository"
 
@@ -28,19 +28,14 @@ export default async function ProductDetailPage({
         </p>
 
         <div className="mt-5 grid gap-8 md:mt-8 md:grid-cols-2 md:gap-10">
-          <div className="overflow-hidden border border-black/10 bg-[#f1ece3]">
-            <div className="relative aspect-[4/5] w-full">
-              <Image
-                src={product.image}
-                alt={getProductImageAlt(product)}
-                fill
-                priority
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover"
-              />
-            </div>
-          </div>
+          {/* Gallery */}
+          <ProductGallery
+            images={product.images}
+            fallbackImage={product.image}
+            alt={getProductImageAlt(product)}
+          />
 
+          {/* Details */}
           <div className="space-y-8">
             <div className="space-y-3">
               <h1 className="font-heading text-3xl leading-tight sm:text-4xl">

@@ -1,12 +1,23 @@
 export type ProductHref = `/products/${string}`
 
+export type ProductImage = {
+  id: string
+  product_id: string
+  storage_path: string
+  url: string
+  display_order: number
+}
+
 export type Product = {
   id: string
   slug: string
   title: string
   description: string
   price: number
+  /** Cover image URL — derived from images[0].url, falls back to legacy image column. */
   image: string
+  /** All product images ordered by display_order. Empty array for legacy products. */
+  images: ProductImage[]
   category: string
   sizes: string[]
   colors: string[]
