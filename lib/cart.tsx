@@ -11,6 +11,7 @@ import {
 
 import type { CartItem, Product } from "@/lib/products"
 import { getCartSubtotal } from "@/lib/products"
+import { mapProductRow } from "@/lib/products.repository"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -60,44 +61,39 @@ function lsWrite(key: string, items: CartItem[]) {
 
 // ─── Supabase sync helpers ────────────────────────────────────────────────────
 
-/** Load cart from Supabase and build CartItem[] by joining products table. */
+/** Load cart from Supabase via two queries (no FK relationship needed). */
 async function dbLoad(userId: string): Promise<CartItem[]> {
   const supabase = createSupabaseBrowserClient()
-  const { data, error } = await supabase
+
+  // Step 1 — Get cart rows for this user
+  const { data: cartRows, error } = await supabase
     .from("cart_items")
-    .select(`
-      quantity, selected_size, selected_color,
-      product:products (
-        id, slug, title, description, price, image,
-        category, sizes, colors, featured
-      )
-    `)
+    .select("product_id, quantity, selected_size, selected_color")
     .eq("user_id", userId)
 
-  if (error || !data) return []
+  if (error || !cartRows || cartRows.length === 0) return []
 
-  return data.flatMap((row) => {
-    type PRow = {
-      id: number; slug: string; title: string; price: number;
-      image: string; description: string; category: string;
-      sizes: string[]; colors: string[]; featured: boolean;
-    }
-    // Supabase returns joined rows as array even for many-to-one
-    const pArr = row.product as PRow[] | PRow | null
-    const p: PRow | null = Array.isArray(pArr) ? (pArr[0] ?? null) : pArr
+  // Step 2 — Fetch full product data (including images) for those product IDs
+  const productIds = [...new Set(cartRows.map((r) => r.product_id as number))]
+  const { data: products } = await supabase
+    .from("products")
+    .select("*, product_images(id, product_id, storage_path, url, display_order)")
+    .in("id", productIds)
+
+  if (!products || products.length === 0) return []
+
+  // Build lookup map
+  const productMap = new Map(
+    products.map((p) => [p.id as number, p as Record<string, unknown>])
+  )
+
+  return cartRows.flatMap((row) => {
+    const rawP = productMap.get(row.product_id as number)
+    if (!rawP) return []
+    const p = mapProductRow(rawP)
     if (!p) return []
     const item: CartItem = {
-      id: String(p.id),
-      slug: p.slug,
-      title: p.title,
-      description: p.description ?? "",
-      price: p.price,
-      image: p.image ?? "",
-      images: [],
-      category: p.category ?? "",
-      sizes: p.sizes ?? [],
-      colors: p.colors ?? [],
-      featured: p.featured ?? false,
+      ...p,
       quantity: row.quantity as number,
       selectedSize: (row.selected_size as string | null) ?? undefined,
       selectedColor: (row.selected_color as string | null) ?? undefined,
@@ -105,6 +101,7 @@ async function dbLoad(userId: string): Promise<CartItem[]> {
     return [item]
   })
 }
+
 
 /**
  * Replace the user's entire DB cart with the current items array.
