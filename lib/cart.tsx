@@ -33,14 +33,13 @@ type CartContextValue = {
 
 const CartContext = createContext<CartContextValue | null>(null)
 
-/** Guest storage key — used when no user is logged in */
 const GUEST_KEY = "aeva_cart_guest"
 
-function storageKey(userId: string | null): string {
+function lsKey(userId: string | null) {
   return userId ? `aeva_cart_${userId}` : GUEST_KEY
 }
 
-function readStorage(key: string): CartItem[] {
+function lsRead(key: string): CartItem[] {
   if (typeof window === "undefined") return []
   try {
     const raw = localStorage.getItem(key)
@@ -52,108 +51,169 @@ function readStorage(key: string): CartItem[] {
   }
 }
 
-function writeStorage(key: string, items: CartItem[]): void {
+function lsWrite(key: string, items: CartItem[]) {
   if (typeof window === "undefined") return
   try {
     localStorage.setItem(key, JSON.stringify(items))
-  } catch {
-    // Storage full or disabled — silent fail
-  }
+  } catch { /* noop */ }
 }
 
-function clearStorage(key: string): void {
-  if (typeof window === "undefined") return
-  try {
-    localStorage.removeItem(key)
-  } catch {
-    /* noop */
-  }
+// ─── Supabase sync helpers ────────────────────────────────────────────────────
+
+/** Load cart from Supabase and build CartItem[] by joining products table. */
+async function dbLoad(userId: string): Promise<CartItem[]> {
+  const supabase = createSupabaseBrowserClient()
+  const { data, error } = await supabase
+    .from("cart_items")
+    .select(`
+      quantity, selected_size, selected_color,
+      product:products (
+        id, name, slug, price, image,
+        description, category, stock
+      )
+    `)
+    .eq("user_id", userId)
+
+  if (error || !data) return []
+
+  return data.flatMap((row) => {
+    const p = row.product as {
+      id: number; name: string; slug: string; price: number;
+      image: string; description: string; category: string; stock: number;
+    } | null
+    if (!p) return []
+    const item: CartItem = {
+      id: String(p.id),
+      name: p.name,
+      slug: p.slug,
+      price: p.price,
+      image: p.image ?? "",
+      description: p.description ?? "",
+      category: p.category ?? "",
+      stock: p.stock ?? 0,
+      images: [],
+      quantity: row.quantity as number,
+      selectedSize: (row.selected_size as string | null) ?? undefined,
+      selectedColor: (row.selected_color as string | null) ?? undefined,
+    }
+    return [item]
+  })
+}
+
+/**
+ * Replace the user's entire DB cart with the current items array.
+ * Using delete-then-insert keeps logic simple for a small cart.
+ */
+async function dbSync(userId: string, items: CartItem[]) {
+  const supabase = createSupabaseBrowserClient()
+  await supabase.from("cart_items").delete().eq("user_id", userId)
+  if (items.length === 0) return
+  await supabase.from("cart_items").insert(
+    items.map((item) => ({
+      user_id: userId,
+      product_id: Number(item.id),
+      quantity: item.quantity,
+      selected_size: item.selectedSize ?? null,
+      selected_color: item.selectedColor ?? null,
+      updated_at: new Date().toISOString(),
+    }))
+  )
 }
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
-  const [hydrated, setHydrated] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
 
-  /**
-   * Current storage key — changes when the logged-in user changes.
-   * null means "not yet resolved" (before Supabase responds).
-   */
+  /** undefined = auth not yet resolved; null = guest; string = logged-in userId */
   const [userId, setUserId] = useState<string | null | undefined>(undefined)
-  const currentKey = useRef<string>(GUEST_KEY)
+
+  const currentUserId = useRef<string | null>(null)
+  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const openCart = useCallback(() => setIsCartOpen(true), [])
   const closeCart = useCallback(() => setIsCartOpen(false), [])
 
-  // ── Auth listener ─────────────────────────────────────────────────────────
+  // ── Subscribe to auth state ───────────────────────────────────────────────
   useEffect(() => {
     const supabase = createSupabaseBrowserClient()
-
-    // Resolve initial auth state
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(({ data: { user } }) =>
       setUserId(user?.id ?? null)
-    })
-
-    // Keep in sync with auth changes (login / logout / account switch)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUserId(session?.user?.id ?? null)
-      }
     )
-
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => setUserId(session?.user?.id ?? null)
+    )
     return () => subscription.unsubscribe()
   }, [])
 
-  // ── Reload cart whenever the active user changes ───────────────────────────
+  // ── Load cart whenever auth resolves or user switches ─────────────────────
   useEffect(() => {
-    // Wait until auth is resolved
-    if (userId === undefined) return
+    if (userId === undefined) return // still loading
 
-    const prevKey = currentKey.current
-    const nextKey = storageKey(userId)
+    const prevUserId = currentUserId.current
+    currentUserId.current = userId ?? null
 
-    if (prevKey === nextKey && hydrated) return // same user, already loaded
-
-    // If switching FROM a logged-in user TO guest/another user, save current
-    // items to the previous key so they're not lost, then load the new key.
-    if (hydrated && prevKey !== nextKey) {
-      // Items are already written to prevKey by the write effect below
-      // (nothing extra needed here)
+    async function load() {
+      if (userId) {
+        // Logged-in: fetch from Supabase (source of truth for cross-device)
+        const dbItems = await dbLoad(userId)
+        if (dbItems.length > 0) {
+          setItems(dbItems)
+          lsWrite(lsKey(userId), dbItems)
+          return
+        }
+        // No DB cart yet — try migrating from localStorage if items exist
+        const cached = lsRead(lsKey(userId))
+        if (cached.length > 0) {
+          setItems(cached)
+          await dbSync(userId, cached)
+        } else {
+          setItems([])
+        }
+      } else {
+        // Logged out: clear if we were previously logged in, load guest cart
+        if (prevUserId) setItems([])
+        else setItems(lsRead(GUEST_KEY))
+      }
     }
 
-    currentKey.current = nextKey
-
-    // When logging out → guest cart starts empty (don't carry over user items)
-    // When switching users → load the new user's own cart
-    const loaded = readStorage(nextKey)
-    setItems(loaded)
-    setHydrated(true)
+    void load()
   }, [userId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Persist every change to the current user's storage key ───────────────
+  // ── Persist to localStorage + debounce sync to Supabase ──────────────────
   useEffect(() => {
-    if (!hydrated) return
-    writeStorage(currentKey.current, items)
-  }, [items, hydrated])
+    if (userId === undefined) return
+    const key = lsKey(userId ?? null)
+    lsWrite(key, items)
 
-  // ─── Cart actions ──────────────────────────────────────────────────────────
+    if (!userId) return // guest: no DB sync needed
+
+    // Debounce Supabase sync by 600ms to batch rapid mutations
+    if (syncTimer.current) clearTimeout(syncTimer.current)
+    syncTimer.current = setTimeout(() => {
+      void dbSync(userId, items)
+    }, 600)
+
+    return () => {
+      if (syncTimer.current) clearTimeout(syncTimer.current)
+    }
+  }, [items, userId])
+
+  // ─── Cart mutations ────────────────────────────────────────────────────────
 
   const addToCart = useCallback(
     (product: Product, selectedSize?: string, selectedColor?: string) => {
       setItems((prev) => {
-        const existingIndex = prev.findIndex(
-          (item) =>
-            item.id === product.id &&
-            item.selectedSize === selectedSize &&
-            item.selectedColor === selectedColor
+        const idx = prev.findIndex(
+          (i) =>
+            i.id === product.id &&
+            i.selectedSize === selectedSize &&
+            i.selectedColor === selectedColor
         )
-        if (existingIndex > -1) {
-          return prev.map((item, index) =>
-            index === existingIndex
-              ? { ...item, quantity: item.quantity + 1 }
-              : item
+        if (idx > -1) {
+          return prev.map((i, n) =>
+            n === idx ? { ...i, quantity: i.quantity + 1 } : i
           )
         }
         return [...prev, { ...product, quantity: 1, selectedSize, selectedColor }]
@@ -166,11 +226,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     (productId: string, selectedSize?: string, selectedColor?: string) => {
       setItems((prev) =>
         prev.filter(
-          (item) =>
+          (i) =>
             !(
-              item.id === productId &&
-              item.selectedSize === selectedSize &&
-              item.selectedColor === selectedColor
+              i.id === productId &&
+              i.selectedSize === selectedSize &&
+              i.selectedColor === selectedColor
             )
         )
       )
@@ -179,24 +239,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   )
 
   const changeQuantity = useCallback(
-    (
-      productId: string,
-      delta: number,
-      selectedSize?: string,
-      selectedColor?: string
-    ) => {
+    (productId: string, delta: number, selectedSize?: string, selectedColor?: string) => {
       setItems((prev) =>
-        prev.flatMap((item) => {
+        prev.flatMap((i) => {
           if (
-            item.id !== productId ||
-            item.selectedSize !== selectedSize ||
-            item.selectedColor !== selectedColor
-          ) {
-            return item
-          }
-          const next = item.quantity + delta
-          if (next <= 0) return []
-          return { ...item, quantity: next }
+            i.id !== productId ||
+            i.selectedSize !== selectedSize ||
+            i.selectedColor !== selectedColor
+          )
+            return i
+          const next = i.quantity + delta
+          return next <= 0 ? [] : [{ ...i, quantity: next }]
         })
       )
     },
@@ -205,10 +258,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clearCart = useCallback(() => {
     setItems([])
-    clearStorage(currentKey.current)
   }, [])
 
-  const cartCount = items.reduce((total, item) => total + item.quantity, 0)
+  const cartCount = items.reduce((t, i) => t + i.quantity, 0)
   const subtotal = getCartSubtotal(items)
 
   return (
@@ -236,8 +288,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
 export function useCart(): CartContextValue {
   const ctx = useContext(CartContext)
-  if (!ctx) {
-    throw new Error("useCart must be used inside <CartProvider>")
-  }
+  if (!ctx) throw new Error("useCart must be used inside <CartProvider>")
   return ctx
 }
