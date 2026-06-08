@@ -31,17 +31,39 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const pathname = request.nextUrl.pathname
-  const isLoginPage = pathname === "/admin/login"
 
-  if (!user && pathname.startsWith("/admin") && !isLoginPage) {
+  // ── Admin routes ──────────────────────────────────────────────────────────
+  const isAdminLoginPage = pathname === "/admin/login"
+
+  if (!user && pathname.startsWith("/admin") && !isAdminLoginPage) {
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = "/admin/login"
     return NextResponse.redirect(redirectUrl)
   }
 
-  if (user && isLoginPage) {
+  if (user && isAdminLoginPage) {
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = "/admin"
+    return NextResponse.redirect(redirectUrl)
+  }
+
+  // ── Customer account routes ───────────────────────────────────────────────
+  if (!user && pathname.startsWith("/account")) {
+    const redirectUrl = request.nextUrl.clone()
+    redirectUrl.pathname = "/login"
+    redirectUrl.searchParams.set("next", pathname)
+    return NextResponse.redirect(redirectUrl)
+  }
+
+  // ── Auth pages — redirect away if already logged in ───────────────────────
+  const isCustomerAuthPage =
+    pathname === "/login" || pathname === "/signup"
+
+  if (user && isCustomerAuthPage) {
+    const next = request.nextUrl.searchParams.get("next") ?? "/account"
+    const redirectUrl = request.nextUrl.clone()
+    redirectUrl.pathname = next
+    redirectUrl.search = ""
     return NextResponse.redirect(redirectUrl)
   }
 

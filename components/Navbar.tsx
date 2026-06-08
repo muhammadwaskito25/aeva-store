@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   AnimatePresence,
   motion,
@@ -10,11 +11,13 @@ import {
   useTransform,
 } from "framer-motion"
 import { Menu, X } from "lucide-react"
+import type { User } from "@supabase/supabase-js"
 
 import { BrandLogo } from "@/components/BrandLogo"
 import { luxuryEase, transition } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import { useCart } from "@/lib/cart"
+import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -70,12 +73,17 @@ function NavLink({
 
 export function Navbar({ onCartClick }: NavbarProps) {
   const { cartCount, openCart } = useCart()
+  const router = useRouter()
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+  const [authLoaded, setAuthLoaded] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
   const reduceMotion = useReducedMotion()
   const { scrollY } = useScroll()
   const headerOpacity = useTransform(scrollY, [0, 40], [0, 1])
 
+  // Scroll handler
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
     onScroll()
@@ -83,12 +91,39 @@ export function Navbar({ onCartClick }: NavbarProps) {
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
+  // Body scroll lock when mobile menu is open
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : ""
-    return () => {
-      document.body.style.overflow = ""
-    }
+    return () => { document.body.style.overflow = "" }
   }, [mobileOpen])
+
+  // Auth state
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient()
+
+    supabase.auth.getUser().then(({ data: { user: u } }) => {
+      setUser(u ?? null)
+      setAuthLoaded(true)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setAuthLoaded(true)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  async function handleLogout() {
+    setLoggingOut(true)
+    setMobileOpen(false)
+    const supabase = createSupabaseBrowserClient()
+    await supabase.auth.signOut()
+    setUser(null)
+    router.push("/")
+    router.refresh()
+    setLoggingOut(false)
+  }
 
   const showSolidHeader = scrolled || mobileOpen || reduceMotion
 
@@ -167,7 +202,30 @@ export function Navbar({ onCartClick }: NavbarProps) {
             <BrandLogo priority className="h-9 w-auto max-w-[9.5rem] sm:h-10 sm:max-w-[11rem]" />
           </div>
 
-          <div className="flex items-center justify-end">
+          {/* Right column — auth + cart */}
+          <div className="flex items-center justify-end gap-4 sm:gap-5">
+            {/* Auth links (desktop) — hidden until loaded to prevent flash */}
+            {authLoaded && (
+              <div className="hidden items-center gap-4 md:flex">
+                {user ? (
+                  <>
+                    <NavLink href="/account" label="Account" />
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      disabled={loggingOut}
+                      className="py-1 text-[11px] font-medium tracking-[0.2em] uppercase text-neutral-500 transition hover:text-neutral-900 disabled:opacity-50"
+                    >
+                      {loggingOut ? "…" : "Logout"}
+                    </button>
+                  </>
+                ) : (
+                  <NavLink href="/login" label="Login" />
+                )}
+              </div>
+            )}
+
+            {/* Cart button */}
             <motion.button
               type="button"
               onClick={onCartClick || openCart}
@@ -264,6 +322,49 @@ export function Navbar({ onCartClick }: NavbarProps) {
                     />
                   </motion.li>
                 ))}
+
+                {/* Auth links in mobile menu */}
+                {authLoaded && (
+                  <motion.li
+                    className="w-full text-center border-t border-neutral-200 pt-4 mt-2"
+                    variants={{
+                      hidden: { opacity: 0, y: 14 },
+                      visible: {
+                        opacity: 1,
+                        y: 0,
+                        transition: { duration: 0.5, ease: luxuryEase },
+                      },
+                    }}
+                  >
+                    {user ? (
+                      <div className="flex flex-col items-center gap-1">
+                        <NavLink
+                          href="/account"
+                          label="Account"
+                          mobileMenu
+                          onClick={() => setMobileOpen(false)}
+                          className="w-full"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleLogout}
+                          disabled={loggingOut}
+                          className="min-h-[3rem] py-2 text-sm font-medium tracking-[0.26em] uppercase text-neutral-400 transition hover:text-neutral-900 disabled:opacity-50"
+                        >
+                          {loggingOut ? "…" : "Logout"}
+                        </button>
+                      </div>
+                    ) : (
+                      <NavLink
+                        href="/login"
+                        label="Login"
+                        mobileMenu
+                        onClick={() => setMobileOpen(false)}
+                        className="w-full"
+                      />
+                    )}
+                  </motion.li>
+                )}
               </motion.ul>
               <p className="mt-14 text-[10px] tracking-[0.24em] uppercase text-neutral-400">
                 AÉVA · Quiet Luxury
