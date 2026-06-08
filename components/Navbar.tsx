@@ -57,14 +57,10 @@ function NavLink({
       )}
     >
       <span className="relative z-10">{label}</span>
-      {!mobileMenu && !reduceMotion ? (
-        <motion.span
+      {!mobileMenu ? (
+        <span
           aria-hidden
-          className="absolute -bottom-0.5 left-0 h-px w-full bg-neutral-900"
-          initial={{ scaleX: 0 }}
-          whileHover={{ scaleX: 1 }}
-          transition={{ duration: 0.5, ease: luxuryEase }}
-          style={{ originX: 0 }}
+          className="absolute -bottom-0.5 left-0 h-px w-full origin-left scale-x-0 bg-neutral-900 transition-transform duration-500 ease-out group-hover:scale-x-100"
         />
       ) : null}
     </Link>
