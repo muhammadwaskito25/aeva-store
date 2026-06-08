@@ -68,8 +68,8 @@ async function dbLoad(userId: string): Promise<CartItem[]> {
     .select(`
       quantity, selected_size, selected_color,
       product:products (
-        id, name, slug, price, image,
-        description, category, stock
+        id, slug, title, description, price, image,
+        category, sizes, colors, featured
       )
     `)
     .eq("user_id", userId)
@@ -77,21 +77,27 @@ async function dbLoad(userId: string): Promise<CartItem[]> {
   if (error || !data) return []
 
   return data.flatMap((row) => {
-    const p = row.product as {
-      id: number; name: string; slug: string; price: number;
-      image: string; description: string; category: string; stock: number;
-    } | null
+    type PRow = {
+      id: number; slug: string; title: string; price: number;
+      image: string; description: string; category: string;
+      sizes: string[]; colors: string[]; featured: boolean;
+    }
+    // Supabase returns joined rows as array even for many-to-one
+    const pArr = row.product as PRow[] | PRow | null
+    const p: PRow | null = Array.isArray(pArr) ? (pArr[0] ?? null) : pArr
     if (!p) return []
     const item: CartItem = {
       id: String(p.id),
-      name: p.name,
       slug: p.slug,
+      title: p.title,
+      description: p.description ?? "",
       price: p.price,
       image: p.image ?? "",
-      description: p.description ?? "",
-      category: p.category ?? "",
-      stock: p.stock ?? 0,
       images: [],
+      category: p.category ?? "",
+      sizes: p.sizes ?? [],
+      colors: p.colors ?? [],
+      featured: p.featured ?? false,
       quantity: row.quantity as number,
       selectedSize: (row.selected_size as string | null) ?? undefined,
       selectedColor: (row.selected_color as string | null) ?? undefined,
