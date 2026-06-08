@@ -12,9 +12,71 @@ export function validateImageFile(file: File): string | null {
     return `${file.name}: hanya JPEG, PNG, atau WebP yang didukung.`
   }
   if (file.size > MAX_FILE_SIZE_BYTES) {
-    return `${file.name}: ukuran maksimal 5 MB.`
+    return `${file.name}: ukuran maksimal 20 MB.`
   }
   return null
+}
+
+/**
+ * Resize and compress an image using the browser Canvas API.
+ * - Max dimension: 2400px (preserves aspect ratio)
+ * - Output: JPEG at 88% quality
+ * This keeps file sizes under ~1 MB so Next.js image optimization works
+ * reliably and pages load fast.
+ */
+async function compressImage(file: File): Promise<Blob> {
+  const MAX_DIM = 2400
+  const QUALITY = 0.88
+
+  return new Promise((resolve, reject) => {
+    const img = new window.Image()
+    const objectUrl = URL.createObjectURL(file)
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+
+      let { naturalWidth: w, naturalHeight: h } = img
+
+      // Scale down if larger than MAX_DIM
+      if (w > MAX_DIM || h > MAX_DIM) {
+        if (w >= h) {
+          h = Math.round((h / w) * MAX_DIM)
+          w = MAX_DIM
+        } else {
+          w = Math.round((w / h) * MAX_DIM)
+          h = MAX_DIM
+        }
+      }
+
+      const canvas = document.createElement("canvas")
+      canvas.width = w
+      canvas.height = h
+      const ctx = canvas.getContext("2d")
+
+      if (!ctx) {
+        reject(new Error("Canvas tidak tersedia."))
+        return
+      }
+
+      ctx.drawImage(img, 0, 0, w, h)
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob)
+          else reject(new Error("Kompresi gambar gagal."))
+        },
+        "image/jpeg",
+        QUALITY
+      )
+    }
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject(new Error(`Gagal membaca file: ${file.name}`))
+    }
+
+    img.src = objectUrl
+  })
 }
 
 /** Fetch all images for a product, ordered by display_order. */
@@ -46,12 +108,14 @@ export async function uploadProductImage(
 
   const supabase = createSupabaseBrowserClient()
 
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg"
-  const storagePath = `${productId}/${crypto.randomUUID()}.${ext}`
+  // Compress & resize to JPEG before uploading — keeps files small so
+  // Next.js image optimization and page load work reliably.
+  const compressed = await compressImage(file)
+  const storagePath = `${productId}/${crypto.randomUUID()}.jpg`
 
   const { error: uploadError } = await supabase.storage
     .from(BUCKET)
-    .upload(storagePath, file, { upsert: false, contentType: file.type })
+    .upload(storagePath, compressed, { upsert: false, contentType: "image/jpeg" })
 
   if (uploadError) throw uploadError
 
