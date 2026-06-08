@@ -141,8 +141,10 @@ export function AboutPage() {
               Quiet Elegance
             </h1>
             <p className="max-w-lg text-[15px] leading-[1.75] text-white/90 sm:text-base sm:leading-relaxed">
-              AÉVA creates refined modestwear designed for modern women who
-              value softness, simplicity, and timeless silhouettes.
+              AÉVA crafts refined scarves for modern women who value softness,
+              simplicity, and timeless drape. Founded by women, for women —
+              every scarf is a quiet declaration of strength, grace, and the
+              freedom to wear on your own terms.
             </p>
           </FadeIn>
         </div>
