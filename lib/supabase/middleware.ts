@@ -32,18 +32,40 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
+  const adminEmail = process.env.ADMIN_EMAIL?.trim()
+
   // ── Admin routes ──────────────────────────────────────────────────────────
   const isAdminLoginPage = pathname === "/admin/login"
+  const isAdminArea = pathname.startsWith("/admin") && !isAdminLoginPage
+  const isAdmin = !!user && !!adminEmail && user.email === adminEmail
 
-  if (!user && pathname.startsWith("/admin") && !isAdminLoginPage) {
+
+
+  // Unauthenticated user → redirect to admin login
+  if (!user && isAdminArea) {
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = "/admin/login"
     return NextResponse.redirect(redirectUrl)
   }
 
-  if (user && isAdminLoginPage) {
+  // Authenticated but NOT admin → redirect to home (403-equivalent)
+  if (user && isAdminArea && !isAdmin) {
+    const redirectUrl = request.nextUrl.clone()
+    redirectUrl.pathname = "/"
+    return NextResponse.redirect(redirectUrl)
+  }
+
+  // Admin on login page → redirect to dashboard
+  if (isAdmin && isAdminLoginPage) {
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = "/admin"
+    return NextResponse.redirect(redirectUrl)
+  }
+
+  // Non-admin on login page → redirect to home (customers shouldn't see admin login)
+  if (user && !isAdmin && isAdminLoginPage) {
+    const redirectUrl = request.nextUrl.clone()
+    redirectUrl.pathname = "/"
     return NextResponse.redirect(redirectUrl)
   }
 
@@ -55,12 +77,20 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
+  // ── Checkout — requires login ──────────────────────────────────────────────
+  if (!user && (pathname === "/checkout" || pathname.startsWith("/checkout/"))) {
+    const redirectUrl = request.nextUrl.clone()
+    redirectUrl.pathname = "/login"
+    redirectUrl.searchParams.set("next", "/checkout")
+    return NextResponse.redirect(redirectUrl)
+  }
+
   // ── Auth pages — redirect away if already logged in ───────────────────────
   const isCustomerAuthPage =
     pathname === "/login" || pathname === "/signup"
 
   if (user && isCustomerAuthPage) {
-    const next = request.nextUrl.searchParams.get("next") ?? "/account"
+    const next = request.nextUrl.searchParams.get("next") ?? (isAdmin ? "/admin" : "/account")
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = next
     redirectUrl.search = ""

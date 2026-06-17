@@ -112,19 +112,22 @@ export default function AccountPage() {
             </p>
           </Link>
 
-          <div className="rounded-2xl border border-neutral-200/60 bg-white/60 p-6">
-            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-400">
+          <Link
+            href="/account/orders"
+            className="group rounded-2xl border border-neutral-200 bg-white p-6 shadow-[0_12px_40px_-28px_rgba(0,0,0,0.15)] transition hover:shadow-[0_18px_50px_-24px_rgba(0,0,0,0.22)] hover:border-neutral-300"
+          >
+            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-700 transition group-hover:bg-neutral-900 group-hover:text-white">
               <svg viewBox="0 0 20 20" fill="currentColor" className="size-5">
                 <path d="M4 4a2 2 0 0 0-2 2v1h16V6a2 2 0 0 0-2-2H4ZM18 9H2v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9ZM4 13a1 1 0 0 1 1-1h1a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Zm5-1a1 1 0 1 0 0 2h1a1 1 0 1 0 0-2H9Z" />
               </svg>
             </div>
-            <h2 className="text-base font-medium tracking-tight text-neutral-400">
+            <h2 className="text-base font-medium tracking-tight">
               Riwayat Pesanan
             </h2>
-            <p className="mt-1 text-sm text-neutral-400">
-              Segera hadir
+            <p className="mt-1 text-sm text-neutral-500">
+              Lihat dan lacak semua pesanan kamu
             </p>
-          </div>
+          </Link>
         </div>
       </section>
     </main>

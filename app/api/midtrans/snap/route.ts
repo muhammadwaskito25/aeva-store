@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 import { getAppBaseUrl, getSnapClient, isMidtransConfigured } from "@/lib/midtrans"
+import { createSupabaseServerClient } from "@/lib/supabase/server"
 
 type SnapItem = {
   id: string
@@ -22,7 +23,20 @@ type SnapRequestBody = {
   customer: SnapCustomer
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  // ── Require authentication (any logged-in customer) ───────────────────────
+  const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json(
+      { error: "Authentication required." },
+      { status: 401 }
+    )
+  }
+
   if (!isMidtransConfigured()) {
     return NextResponse.json(
       { error: "Midtrans belum dikonfigurasi." },

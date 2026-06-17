@@ -603,6 +603,15 @@ export default function AdminPage() {
           return
         }
 
+        // ── Admin identity check (second layer after middleware) ───────────
+        // This protects against edge cases where middleware cache is stale.
+        const response = await fetch("/api/admin/verify")
+        if (!response.ok) {
+          // Not admin — redirect to home
+          router.replace("/")
+          return
+        }
+
         setUserEmail(user.email ?? null)
         await loadProducts()
       } catch (err) {
@@ -649,6 +658,12 @@ export default function AdminPage() {
               <p className="text-sm text-neutral-500">{userEmail}</p>
             ) : null}
             <p className="text-sm text-neutral-500">{products.length} produk</p>
+            <a
+              href="/admin/orders"
+              className="inline-flex h-10 items-center rounded-xl border border-neutral-200 px-4 text-[11px] tracking-[0.14em] uppercase text-neutral-700 transition hover:border-neutral-400"
+            >
+              Pesanan
+            </a>
             <Button
               type="button"
               variant="outline"
