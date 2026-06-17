@@ -1,5 +1,13 @@
-import { redirect } from "next/navigation"
+"use client"
+
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 export default function ProductsPage() {
-  redirect("/#collection")
+  const router = useRouter()
+  useEffect(() => {
+    router.replace("/#collection")
+  }, [router])
+
+  return null
 }
