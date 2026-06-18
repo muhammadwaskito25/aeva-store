@@ -66,11 +66,11 @@ export function ProductCard({
         {/* ── Product Info ─────────────────────────────────────── */}
         <div className="pt-3 pb-1 sm:pt-4">
           {/* Product name — uppercase, bold, tracking */}
-          <h3 className="line-clamp-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-neutral-900 sm:text-xs md:text-[11px] md:tracking-[0.12em]">
+          <h3 className="line-clamp-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-900 sm:text-sm md:text-sm md:tracking-[0.12em]">
             {title}
           </h3>
-          {/* Price */}
-          <p className="mt-1 text-[11px] text-neutral-500 sm:text-xs md:text-sm">
+          {/* Price — smaller, muted */}
+          <p className="mt-1 text-[10px] text-neutral-400 sm:text-[11px]">
             {price}
           </p>
         </div>
