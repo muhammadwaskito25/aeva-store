@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { CheckCircle2, ChevronDown, Loader2, MapPin, Package, Truck } from "lucide-react"
+import { CheckCircle2, Loader2, MapPin, Package } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { formatPrice } from "@/lib/products"
@@ -183,6 +183,63 @@ function AreaAutocomplete({
   )
 }
 
+// ─── Courier Logo Map ─────────────────────────────────────────────────────────
+// Biteship rates API does not return logo URLs.
+// We use static, well-known CDN images for the 3 active couriers.
+// If a courier_code is not in this map, we fall back to bold initials.
+
+const COURIER_LOGO_URLS: Record<string, string> = {
+  jne: "https://assets.biteship.com/couriers/jne.png",
+  sicepat: "https://assets.biteship.com/couriers/sicepat.png",
+  anteraja: "https://assets.biteship.com/couriers/anteraja.png",
+  jnt: "https://assets.biteship.com/couriers/jnt.png",
+  pos: "https://assets.biteship.com/couriers/pos.png",
+  tiki: "https://assets.biteship.com/couriers/tiki.png",
+}
+
+function CourierLogo({ code, name, selected }: { code: string; name: string; selected: boolean }) {
+  const logoUrl = COURIER_LOGO_URLS[code.toLowerCase()]
+
+  if (logoUrl) {
+    return (
+      <div
+        className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border ${
+          selected ? "border-white/20 bg-white" : "border-neutral-200 bg-white"
+        }`}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={logoUrl}
+          alt={name}
+          width={32}
+          height={32}
+          className="h-8 w-8 object-contain"
+          onError={(e) => {
+            // Fallback to initials if image fails to load
+            const target = e.currentTarget
+            target.style.display = "none"
+            const parent = target.parentElement
+            if (parent) parent.setAttribute("data-fallback", "true")
+          }}
+        />
+      </div>
+    )
+  }
+
+  // Fallback — show courier initials
+  return (
+    <div
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border text-[10px] font-bold tracking-wider uppercase ${
+        selected
+          ? "border-white/20 bg-white/10 text-white"
+          : "border-neutral-200 bg-neutral-100 text-neutral-600"
+      }`}
+    >
+      {code.slice(0, 3).toUpperCase()}
+    </div>
+  )
+}
+
 // ─── Courier Card ─────────────────────────────────────────────────────────────
 
 function CourierCard({
@@ -198,20 +255,18 @@ function CourierCard({
     <button
       type="button"
       onClick={onSelect}
-      className={`flex w-full items-center justify-between gap-4 border p-4 text-left transition ${
+      className={`flex w-full items-center justify-between gap-4 border p-3.5 text-left transition ${
         selected
           ? "border-black bg-neutral-900 text-white"
           : "border-black/15 bg-[#fcfbf8] hover:border-black/30 hover:bg-white"
       }`}
     >
       <div className="flex items-center gap-3">
-        <div
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${
-            selected ? "border-white/30 bg-white/10" : "border-neutral-200 bg-white"
-          }`}
-        >
-          <Truck className={`size-4 ${selected ? "text-white" : "text-neutral-500"}`} />
-        </div>
+        <CourierLogo
+          code={rate.courier_code}
+          name={rate.courier_name}
+          selected={selected}
+        />
         <div>
           <p className={`text-sm font-medium ${selected ? "text-white" : "text-neutral-900"}`}>
             {rate.courier_name} — {rate.courier_service_name}

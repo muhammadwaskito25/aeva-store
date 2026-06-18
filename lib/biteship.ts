@@ -145,7 +145,7 @@ export async function getShippingRates(
   const requestBody = {
     origin_area_id: originAreaId,
     destination_area_id: params.destinationAreaId,
-    couriers: "anteraja,jne,jnt,sicepat,sap,ninja,tiki,pos,lion,rex",
+    couriers: process.env.BITESHIP_ACTIVE_COURIERS ?? "jne,sicepat,anteraja",
     items: [
       {
         name: "Produk AEVA",
