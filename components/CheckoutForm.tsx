@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, useCallback } from "react"
+import React, { useEffect, useRef, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { CheckCircle2, Loader2, MapPin, Package } from "lucide-react"
 
@@ -183,62 +183,72 @@ function AreaAutocomplete({
   )
 }
 
-// ─── Courier Logo Map ─────────────────────────────────────────────────────────
-// Biteship rates API does not return logo URLs.
-// We use static, well-known CDN images for the 3 active couriers.
-// If a courier_code is not in this map, we fall back to bold initials.
+// ─── Courier Logos (Inline SVG) ───────────────────────────────────────────────
+// We render logos as inline SVG so they are 100% reliable on all environments.
+// No external CDN dependency — images are embedded directly in the component.
 
-const COURIER_LOGO_URLS: Record<string, string> = {
-  jne: "https://assets.biteship.com/couriers/jne.png",
-  sicepat: "https://assets.biteship.com/couriers/sicepat.png",
-  anteraja: "https://assets.biteship.com/couriers/anteraja.png",
-  jnt: "https://assets.biteship.com/couriers/jnt.png",
-  pos: "https://assets.biteship.com/couriers/pos.png",
-  tiki: "https://assets.biteship.com/couriers/tiki.png",
+function JneLogo({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 60 24" fill="none" className={className} aria-label="JNE">
+      <rect width="60" height="24" rx="4" fill="#E30613" />
+      <text x="30" y="17" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold" fontFamily="Arial,sans-serif">JNE</text>
+    </svg>
+  )
 }
 
-function CourierLogo({ code, name, selected }: { code: string; name: string; selected: boolean }) {
-  const logoUrl = COURIER_LOGO_URLS[code.toLowerCase()]
+function SicepatLogo({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 60 24" fill="none" className={className} aria-label="SiCepat">
+      <rect width="60" height="24" rx="4" fill="#FF6600" />
+      <text x="30" y="17" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold" fontFamily="Arial,sans-serif">SiCepat</text>
+    </svg>
+  )
+}
 
-  if (logoUrl) {
-    return (
-      <div
-        className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border ${
-          selected ? "border-white/20 bg-white" : "border-neutral-200 bg-white"
-        }`}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={logoUrl}
-          alt={name}
-          width={32}
-          height={32}
-          className="h-8 w-8 object-contain"
-          onError={(e) => {
-            // Fallback to initials if image fails to load
-            const target = e.currentTarget
-            target.style.display = "none"
-            const parent = target.parentElement
-            if (parent) parent.setAttribute("data-fallback", "true")
-          }}
-        />
-      </div>
-    )
-  }
+function AnterajaLogo({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 60 24" fill="none" className={className} aria-label="AnterAja">
+      <rect width="60" height="24" rx="4" fill="#F7941D" />
+      <text x="30" y="17" textAnchor="middle" fill="white" fontSize="7.5" fontWeight="bold" fontFamily="Arial,sans-serif">AnterAja</text>
+    </svg>
+  )
+}
 
-  // Fallback — show courier initials
+const COURIER_LOGO_COMPONENTS: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
+  jne: JneLogo,
+  sicepat: SicepatLogo,
+  anteraja: AnterajaLogo,
+}
+
+function CourierLogo({ code, selected }: { code: string; name: string; selected: boolean }) {
+  const key = code.toLowerCase()
+  const LogoComponent = COURIER_LOGO_COMPONENTS[key]
+
   return (
     <div
-      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border text-[10px] font-bold tracking-wider uppercase ${
-        selected
-          ? "border-white/20 bg-white/10 text-white"
-          : "border-neutral-200 bg-neutral-100 text-neutral-600"
+      className={`flex h-10 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border ${
+        selected ? "border-white/20 bg-white" : "border-neutral-200 bg-white"
       }`}
     >
-      {code.slice(0, 3).toUpperCase()}
+      {LogoComponent ? (
+        <LogoComponent className="h-6 w-auto" />
+      ) : (
+        // Fallback — show bold initials for unknown couriers
+        <span
+          className={`text-[10px] font-bold uppercase tracking-wider ${
+            selected ? "text-neutral-700" : "text-neutral-600"
+          }`}
+        >
+          {key.slice(0, 3).toUpperCase()}
+        </span>
+      )}
     </div>
   )
 }
+
 
 // ─── Courier Card ─────────────────────────────────────────────────────────────
 
