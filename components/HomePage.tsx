@@ -42,7 +42,7 @@ export function HomePage({ featuredProducts }: HomePageProps) {
         <FadeIn className="order-2 space-y-6 sm:space-y-8 md:order-1">
           <div className="space-y-3 sm:space-y-4">
             <p className="text-[11px] font-medium tracking-[0.3em] uppercase text-neutral-500">
-              The Silk Scarf
+              Solids Viscose Series
             </p>
             <h1 className="font-heading text-4xl leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
               Quiet Luxury,
@@ -94,7 +94,7 @@ export function HomePage({ featuredProducts }: HomePageProps) {
           <FadeIn className="mb-10 flex flex-col gap-3.5 sm:mb-16 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
             <div className="space-y-2.5 sm:space-y-3">
               <p className="text-[11px] font-medium tracking-[0.24em] uppercase text-neutral-500">
-                SS26 Collection
+                Solids Viscose Collection
               </p>
               <h2 className="font-heading text-3xl tracking-tight sm:text-4xl">
                 Featured Pieces
