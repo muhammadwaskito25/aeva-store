@@ -67,8 +67,14 @@ export type Order = {
   shipping_postal_code: string
 
   // Fulfillment
-  courier: string | null
+  courier: string | null           // Nama kurir, e.g. "JNE"
+  courier_code: string | null      // Kode kurir dari Biteship, e.g. "jne"
+  shipping_service: string | null  // Nama layanan, e.g. "REG", "YES"
   tracking_number: string | null
+
+  // Biteship Area IDs (untuk future auto-shipment creation)
+  origin_area_id: string | null
+  destination_area_id: string | null
 
   // Midtrans Readiness
   midtrans_transaction_id: string | null
@@ -109,6 +115,11 @@ export type CreateOrderPayload = {
   shipping_city: string
   shipping_province: string
   shipping_postal_code: string
+  // Biteship shipping info
+  courier?: string | null
+  courier_code?: string | null
+  shipping_service?: string | null
+  destination_area_id?: string | null
   items: {
     product_id: string
     product_name: string

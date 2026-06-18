@@ -1,11 +1,15 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import { CheckCircle2, ChevronDown, Loader2, MapPin, Package, Truck } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { formatPrice } from "@/lib/products"
 import { useCart } from "@/lib/cart"
+import type { BiteshipArea, ShippingRate } from "@/lib/biteship"
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 export type CheckoutOrderItem = {
   id: string
@@ -23,19 +27,16 @@ type CheckoutFormProps = {
 }
 
 type FormData = {
-  // Customer Info
   firstName: string
   lastName: string
   email: string
   phone: string
-  // Shipping Address
   shippingName: string
   shippingPhone: string
   shippingAddress: string
   shippingCity: string
   shippingProvince: string
   shippingPostalCode: string
-  // Notes
   customerNote: string
 }
 
@@ -53,27 +54,209 @@ const initialForm: FormData = {
   customerNote: "",
 }
 
-const inputClassName =
-  "h-11 w-full border border-black/15 bg-[#fcfbf8] px-3 text-sm outline-none transition focus:border-black/30"
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
-const labelClassName = "space-y-2"
-const labelTextClassName =
-  "block text-xs tracking-[0.12em] uppercase text-neutral-600"
+const inputCls =
+  "h-11 w-full border border-black/15 bg-[#fcfbf8] px-3 text-sm outline-none transition focus:border-black/30"
+const labelCls = "space-y-2"
+const labelTextCls = "block text-xs tracking-[0.12em] uppercase text-neutral-600"
 const requiredMark = <span className="ml-0.5 text-red-500">*</span>
 
+// ─── Area Autocomplete ────────────────────────────────────────────────────────
+
+function AreaAutocomplete({
+  onSelect,
+}: {
+  onSelect: (area: BiteshipArea) => void
+}) {
+  const [query, setQuery] = useState("")
+  const [areas, setAreas] = useState<BiteshipArea[]>([])
+  const [loading, setLoading] = useState(false)
+  const [open, setOpen] = useState(false)
+  const [selectedName, setSelectedName] = useState("")
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const search = useCallback(async (value: string) => {
+    if (value.trim().length < 3) {
+      setAreas([])
+      setOpen(false)
+      return
+    }
+    setLoading(true)
+    try {
+      const res = await fetch(
+        `/api/shipping/areas?input=${encodeURIComponent(value)}`
+      )
+      if (!res.ok) throw new Error()
+      const data = (await res.json()) as { areas: BiteshipArea[] }
+      setAreas(data.areas ?? [])
+      setOpen(true)
+    } catch {
+      setAreas([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value
+    setQuery(value)
+    setSelectedName("")
+
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      void search(value)
+    }, 450)
+  }
+
+  function handleSelect(area: BiteshipArea) {
+    setSelectedName(area.name)
+    setQuery(area.name)
+    setOpen(false)
+    setAreas([])
+    onSelect(area)
+  }
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside)
+    return () => document.removeEventListener("mousedown", onClickOutside)
+  }, [])
+
+  return (
+    <div ref={containerRef} className="relative">
+      <div className="relative">
+        <MapPin className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
+        <input
+          id="areaSearch"
+          type="text"
+          placeholder="Ketik nama kecamatan... (min. 3 huruf)"
+          value={query}
+          onChange={handleChange}
+          autoComplete="off"
+          className={`${inputCls} pl-9 ${selectedName ? "border-black/30 bg-white" : ""}`}
+        />
+        {loading && (
+          <Loader2 className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-neutral-400" />
+        )}
+        {selectedName && !loading && (
+          <CheckCircle2 className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-emerald-500" />
+        )}
+      </div>
+
+      {open && areas.length > 0 && (
+        <div className="absolute z-50 mt-1 w-full overflow-hidden border border-black/10 bg-white shadow-xl">
+          {areas.map((area) => (
+            <button
+              key={area.id}
+              type="button"
+              onClick={() => handleSelect(area)}
+              className="flex w-full flex-col items-start px-4 py-3 text-left text-sm transition hover:bg-neutral-50 border-b border-neutral-100 last:border-0"
+            >
+              <span className="font-medium text-neutral-900">
+                {area.administrative_division_level_3_name}
+              </span>
+              <span className="text-xs text-neutral-500">
+                {area.administrative_division_level_2_name},{" "}
+                {area.administrative_division_level_1_name} ·{" "}
+                {area.postal_code}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {open && areas.length === 0 && !loading && query.trim().length >= 3 && (
+        <div className="absolute z-50 mt-1 w-full border border-black/10 bg-white px-4 py-3 shadow-xl">
+          <p className="text-sm text-neutral-500">
+            Kecamatan tidak ditemukan. Coba kata kunci lain.
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Courier Card ─────────────────────────────────────────────────────────────
+
+function CourierCard({
+  rate,
+  selected,
+  onSelect,
+}: {
+  rate: ShippingRate
+  selected: boolean
+  onSelect: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`flex w-full items-center justify-between gap-4 border p-4 text-left transition ${
+        selected
+          ? "border-black bg-neutral-900 text-white"
+          : "border-black/15 bg-[#fcfbf8] hover:border-black/30 hover:bg-white"
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <div
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${
+            selected ? "border-white/30 bg-white/10" : "border-neutral-200 bg-white"
+          }`}
+        >
+          <Truck className={`size-4 ${selected ? "text-white" : "text-neutral-500"}`} />
+        </div>
+        <div>
+          <p className={`text-sm font-medium ${selected ? "text-white" : "text-neutral-900"}`}>
+            {rate.courier_name} — {rate.courier_service_name}
+          </p>
+          <p className={`text-xs ${selected ? "text-white/70" : "text-neutral-500"}`}>
+            {rate.duration}
+          </p>
+        </div>
+      </div>
+      <div className="shrink-0 text-right">
+        <p className={`text-sm font-semibold ${selected ? "text-white" : "text-neutral-900"}`}>
+          {formatPrice(rate.price)}
+        </p>
+        {selected && (
+          <p className="text-[10px] tracking-widest uppercase text-white/70 mt-0.5">
+            Dipilih ✓
+          </p>
+        )}
+      </div>
+    </button>
+  )
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 export function CheckoutForm({
-  shippingFee,
   midtransClientKey,
   midtransScriptUrl,
   midtransEnabled,
 }: CheckoutFormProps) {
   const router = useRouter()
   const { items: cartItems, subtotal, clearCart } = useCart()
+
   const [form, setForm] = useState<FormData>(initialForm)
   const [isPaying, setIsPaying] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [snapReady, setSnapReady] = useState(false)
   const orderNumberRef = useRef<string | null>(null)
+
+  // ── Biteship State ──────────────────────────────────────────────────────────
+  const [destinationAreaId, setDestinationAreaId] = useState<string | null>(null)
+  const [shippingRates, setShippingRates] = useState<ShippingRate[]>([])
+  const [selectedRate, setSelectedRate] = useState<ShippingRate | null>(null)
+  const [ratesLoading, setRatesLoading] = useState(false)
+  const [ratesError, setRatesError] = useState<string | null>(null)
 
   const orderItems: CheckoutOrderItem[] = cartItems.map((item) => ({
     id: item.id,
@@ -88,13 +271,15 @@ export function CheckoutForm({
     quantity: item.quantity,
   }))
 
+  const totalQuantity = cartItems.reduce((t, i) => t + i.quantity, 0)
+  const shippingFee = selectedRate?.price ?? 0
   const total = subtotal > 0 ? subtotal + shippingFee : 0
 
   function setField<K extends keyof FormData>(key: K, value: FormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
 
-  // ── Load Midtrans Snap script ─────────────────────────────
+  // ── Load Midtrans Snap ──────────────────────────────────────────────────────
   useEffect(() => {
     if (!midtransEnabled || !midtransClientKey) return
 
@@ -120,22 +305,62 @@ export function CheckoutForm({
     }
   }, [midtransClientKey, midtransEnabled, midtransScriptUrl])
 
-  // ── Validate form ─────────────────────────────────────────
+  // ── Fetch rates when area selected ─────────────────────────────────────────
+  async function fetchRates(areaId: string) {
+    setRatesLoading(true)
+    setRatesError(null)
+    setSelectedRate(null)
+    setShippingRates([])
 
+    try {
+      const res = await fetch("/api/shipping/rates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          destination_area_id: areaId,
+          total_quantity: totalQuantity,
+        }),
+      })
+
+      const data = (await res.json()) as { rates?: ShippingRate[]; error?: string }
+
+      if (!res.ok || !data.rates) {
+        throw new Error(data.error ?? "Gagal mengambil ongkir.")
+      }
+
+      setShippingRates(data.rates)
+
+      if (data.rates.length === 0) {
+        setRatesError("Tidak ada kurir yang tersedia untuk area ini.")
+      }
+    } catch (err) {
+      setRatesError(err instanceof Error ? err.message : "Gagal mengambil ongkir.")
+    } finally {
+      setRatesLoading(false)
+    }
+  }
+
+  function handleAreaSelect(area: BiteshipArea) {
+    setDestinationAreaId(area.id)
+    setField("shippingCity", area.administrative_division_level_2_name)
+    setField("shippingProvince", area.administrative_division_level_1_name)
+    setField("shippingPostalCode", String(area.postal_code))
+    void fetchRates(area.id)
+  }
+
+  // ── Validate ────────────────────────────────────────────────────────────────
   function validate(): string | null {
     if (!form.firstName.trim()) return "Nama depan wajib diisi."
     if (!form.email.trim()) return "Email wajib diisi."
     if (!form.shippingName.trim()) return "Nama penerima wajib diisi."
     if (!form.shippingPhone.trim()) return "Nomor HP penerima wajib diisi."
     if (!form.shippingAddress.trim()) return "Alamat pengiriman wajib diisi."
-    if (!form.shippingCity.trim()) return "Kota wajib diisi."
-    if (!form.shippingProvince.trim()) return "Provinsi wajib diisi."
-    if (!form.shippingPostalCode.trim()) return "Kode pos wajib diisi."
+    if (!destinationAreaId) return "Pilih kecamatan tujuan pengiriman."
+    if (!selectedRate) return "Pilih kurir pengiriman terlebih dahulu."
     return null
   }
 
-  // ── Save order to DB (Step 1 — always, before Midtrans) ───
-
+  // ── Save Order ──────────────────────────────────────────────────────────────
   async function saveOrder(): Promise<string> {
     const customerName = `${form.firstName.trim()} ${form.lastName.trim()}`.trim()
 
@@ -152,9 +377,14 @@ export function CheckoutForm({
         shipping_name: form.shippingName.trim(),
         shipping_phone: form.shippingPhone.trim(),
         shipping_address: form.shippingAddress.trim(),
-        shipping_city: form.shippingCity.trim(),
-        shipping_province: form.shippingProvince.trim(),
-        shipping_postal_code: form.shippingPostalCode.trim(),
+        shipping_city: form.shippingCity,
+        shipping_province: form.shippingProvince,
+        shipping_postal_code: form.shippingPostalCode,
+        // Biteship fields
+        courier: selectedRate?.courier_name ?? null,
+        courier_code: selectedRate?.courier_code ?? null,
+        shipping_service: selectedRate?.courier_service_name ?? null,
+        destination_area_id: destinationAreaId,
         items: cartItems.map((item) => ({
           product_id: item.id,
           product_name: item.title,
@@ -179,11 +409,9 @@ export function CheckoutForm({
     return data.order_number
   }
 
-  // ── Main payment handler ──────────────────────────────────
-
+  // ── Handle Pay ──────────────────────────────────────────────────────────────
   async function handlePay() {
     setError(null)
-
     const validationError = validate()
     if (validationError) {
       setError(validationError)
@@ -193,14 +421,11 @@ export function CheckoutForm({
     setIsPaying(true)
 
     try {
-      // Step 1: Always save order first (status = Pending)
       const orderNumber = await saveOrder()
       orderNumberRef.current = orderNumber
 
-      // Step 2: If Midtrans is configured, open Snap popup
       if (midtransEnabled && snapReady && window.snap) {
         const customerName = `${form.firstName.trim()} ${form.lastName.trim()}`.trim()
-
         const response = await fetch("/api/midtrans/snap", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -242,20 +467,15 @@ export function CheckoutForm({
             router.push(`/account/orders/${orderNumber}?status=pending`)
           },
           onError: () => {
-            // Order already saved as Pending — user can retry later
-            setError(
-              "Pembayaran gagal. Pesanan Anda sudah tersimpan dan bisa dibayar nanti."
-            )
+            setError("Pembayaran gagal. Pesanan Anda sudah tersimpan dan bisa dibayar nanti.")
             setIsPaying(false)
           },
           onClose: () => {
-            // Order already saved — redirect to order detail
             clearCart()
             router.push(`/account/orders/${orderNumber}`)
           },
         })
       } else {
-        // Midtrans not configured — order saved as Pending, redirect to orders
         clearCart()
         router.push(`/account/orders/${orderNumber}`)
       }
@@ -265,10 +485,12 @@ export function CheckoutForm({
     }
   }
 
+  // ── Render ──────────────────────────────────────────────────────────────────
+
   return (
     <>
       <div className="space-y-8">
-        {/* ── Step 1: Customer Information ───────────────── */}
+        {/* ── Step 1: Customer Information ─────────────────── */}
         <section className="space-y-5 border border-black/10 bg-white p-5 sm:p-6">
           <div className="space-y-1">
             <p className="text-[11px] tracking-[0.14em] uppercase text-neutral-500">
@@ -280,34 +502,32 @@ export function CheckoutForm({
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className={labelClassName}>
-              <span className={labelTextClassName}>
-                Nama Depan {requiredMark}
-              </span>
+            <label className={labelCls}>
+              <span className={labelTextCls}>Nama Depan {requiredMark}</span>
               <input
                 id="firstName"
                 type="text"
                 placeholder="Aeva"
                 value={form.firstName}
                 onChange={(e) => setField("firstName", e.target.value)}
-                className={inputClassName}
+                className={inputCls}
               />
             </label>
 
-            <label className={labelClassName}>
-              <span className={labelTextClassName}>Nama Belakang</span>
+            <label className={labelCls}>
+              <span className={labelTextCls}>Nama Belakang</span>
               <input
                 id="lastName"
                 type="text"
                 placeholder="Studio"
                 value={form.lastName}
                 onChange={(e) => setField("lastName", e.target.value)}
-                className={inputClassName}
+                className={inputCls}
               />
             </label>
 
             <label className="space-y-2 sm:col-span-2">
-              <span className={labelTextClassName}>Email {requiredMark}</span>
+              <span className={labelTextCls}>Email {requiredMark}</span>
               <input
                 id="email"
                 type="email"
@@ -315,27 +535,25 @@ export function CheckoutForm({
                 placeholder="hello@aeva.store"
                 value={form.email}
                 onChange={(e) => setField("email", e.target.value)}
-                className={inputClassName}
+                className={inputCls}
               />
             </label>
 
             <label className="space-y-2 sm:col-span-2">
-              <span className={labelTextClassName}>
-                Nomor HP (Opsional)
-              </span>
+              <span className={labelTextCls}>Nomor HP (Opsional)</span>
               <input
                 id="phone"
                 type="tel"
                 placeholder="+62 812 0000 0000"
                 value={form.phone}
                 onChange={(e) => setField("phone", e.target.value)}
-                className={inputClassName}
+                className={inputCls}
               />
             </label>
           </div>
         </section>
 
-        {/* ── Step 2: Shipping Address ────────────────────── */}
+        {/* ── Step 2: Shipping Address ─────────────────────── */}
         <section className="space-y-5 border border-black/10 bg-white p-5 sm:p-6">
           <div className="space-y-1">
             <p className="text-[11px] tracking-[0.14em] uppercase text-neutral-500">
@@ -347,36 +565,32 @@ export function CheckoutForm({
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className={labelClassName}>
-              <span className={labelTextClassName}>
-                Nama Penerima {requiredMark}
-              </span>
+            <label className={labelCls}>
+              <span className={labelTextCls}>Nama Penerima {requiredMark}</span>
               <input
                 id="shippingName"
                 type="text"
                 placeholder="Nama lengkap penerima"
                 value={form.shippingName}
                 onChange={(e) => setField("shippingName", e.target.value)}
-                className={inputClassName}
+                className={inputCls}
               />
             </label>
 
-            <label className={labelClassName}>
-              <span className={labelTextClassName}>
-                HP Penerima {requiredMark}
-              </span>
+            <label className={labelCls}>
+              <span className={labelTextCls}>HP Penerima {requiredMark}</span>
               <input
                 id="shippingPhone"
                 type="tel"
                 placeholder="+62 812 0000 0000"
                 value={form.shippingPhone}
                 onChange={(e) => setField("shippingPhone", e.target.value)}
-                className={inputClassName}
+                className={inputCls}
               />
             </label>
 
             <label className="space-y-2 sm:col-span-2">
-              <span className={labelTextClassName}>
+              <span className={labelTextCls}>
                 Alamat Lengkap {requiredMark}
               </span>
               <input
@@ -385,69 +599,123 @@ export function CheckoutForm({
                 placeholder="Jl. Sudirman No. 12, Apt. 3B"
                 value={form.shippingAddress}
                 onChange={(e) => setField("shippingAddress", e.target.value)}
-                className={inputClassName}
+                className={inputCls}
               />
             </label>
 
-            <label className={labelClassName}>
-              <span className={labelTextClassName}>Kota {requiredMark}</span>
+            {/* Area Autocomplete */}
+            <div className="space-y-2 sm:col-span-2">
+              <span className={labelTextCls}>
+                Kecamatan {requiredMark}
+                <span className="ml-1.5 font-normal normal-case text-neutral-400">
+                  — ketik untuk cari
+                </span>
+              </span>
+              <AreaAutocomplete onSelect={handleAreaSelect} />
+            </div>
+
+            {/* Auto-filled fields */}
+            <label className={labelCls}>
+              <span className={labelTextCls}>Kota / Kabupaten</span>
               <input
                 id="shippingCity"
                 type="text"
-                placeholder="Jakarta"
+                readOnly
+                placeholder="Terisi otomatis"
                 value={form.shippingCity}
-                onChange={(e) => setField("shippingCity", e.target.value)}
-                className={inputClassName}
+                className={`${inputCls} text-neutral-500 bg-neutral-50 cursor-not-allowed`}
               />
             </label>
 
-            <label className={labelClassName}>
-              <span className={labelTextClassName}>
-                Provinsi {requiredMark}
-              </span>
+            <label className={labelCls}>
+              <span className={labelTextCls}>Provinsi</span>
               <input
                 id="shippingProvince"
                 type="text"
-                placeholder="DKI Jakarta"
+                readOnly
+                placeholder="Terisi otomatis"
                 value={form.shippingProvince}
-                onChange={(e) => setField("shippingProvince", e.target.value)}
-                className={inputClassName}
+                className={`${inputCls} text-neutral-500 bg-neutral-50 cursor-not-allowed`}
               />
             </label>
 
-            <label className={labelClassName}>
-              <span className={labelTextClassName}>
-                Kode Pos {requiredMark}
-              </span>
+            <label className={labelCls}>
+              <span className={labelTextCls}>Kode Pos</span>
               <input
                 id="shippingPostalCode"
                 type="text"
-                placeholder="10220"
+                readOnly
+                placeholder="Terisi otomatis"
                 value={form.shippingPostalCode}
-                onChange={(e) =>
-                  setField("shippingPostalCode", e.target.value)
-                }
-                className={inputClassName}
+                className={`${inputCls} text-neutral-500 bg-neutral-50 cursor-not-allowed`}
               />
             </label>
 
-            <label className={labelClassName}>
-              <span className={labelTextClassName}>Negara</span>
+            <label className={labelCls}>
+              <span className={labelTextCls}>Negara</span>
               <input
                 type="text"
                 value="Indonesia"
                 readOnly
-                className={`${inputClassName} text-neutral-500`}
+                className={`${inputCls} text-neutral-500 bg-neutral-50 cursor-not-allowed`}
               />
             </label>
           </div>
         </section>
 
-        {/* ── Step 3: Customer Note ───────────────────────── */}
-        <section className="space-y-4 border border-black/10 bg-white p-5 sm:p-6">
+        {/* ── Step 3: Pilih Kurir ───────────────────────────── */}
+        <section className="space-y-5 border border-black/10 bg-white p-5 sm:p-6">
           <div className="space-y-1">
             <p className="text-[11px] tracking-[0.14em] uppercase text-neutral-500">
               Step 3
+            </p>
+            <h2 className="font-heading text-2xl sm:text-3xl">
+              Pilih Kurir
+            </h2>
+          </div>
+
+          {!destinationAreaId && (
+            <div className="flex items-center gap-3 rounded-xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-5 text-sm text-neutral-500">
+              <Package className="size-5 shrink-0 text-neutral-400" />
+              Pilih kecamatan tujuan di Step 2 untuk melihat pilihan kurir dan ongkir.
+            </div>
+          )}
+
+          {ratesLoading && (
+            <div className="flex items-center justify-center gap-2 py-8 text-sm text-neutral-500">
+              <Loader2 className="size-5 animate-spin text-neutral-400" />
+              Mengecek ongkir...
+            </div>
+          )}
+
+          {ratesError && !ratesLoading && (
+            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3">
+              <p className="text-sm text-red-700">{ratesError}</p>
+            </div>
+          )}
+
+          {!ratesLoading && !ratesError && shippingRates.length > 0 && (
+            <div className="space-y-2.5">
+              {shippingRates.map((rate) => (
+                <CourierCard
+                  key={`${rate.courier_code}-${rate.courier_service_name}`}
+                  rate={rate}
+                  selected={
+                    selectedRate?.courier_code === rate.courier_code &&
+                    selectedRate?.courier_service_name === rate.courier_service_name
+                  }
+                  onSelect={() => setSelectedRate(rate)}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* ── Step 4: Customer Note ─────────────────────────── */}
+        <section className="space-y-4 border border-black/10 bg-white p-5 sm:p-6">
+          <div className="space-y-1">
+            <p className="text-[11px] tracking-[0.14em] uppercase text-neutral-500">
+              Step 4
             </p>
             <h2 className="font-heading text-2xl sm:text-3xl">
               Catatan Pesanan
@@ -455,7 +723,7 @@ export function CheckoutForm({
           </div>
 
           <label className="space-y-2">
-            <span className={labelTextClassName}>
+            <span className={labelTextCls}>
               Catatan untuk AÉVA (Opsional)
             </span>
             <textarea
@@ -470,7 +738,7 @@ export function CheckoutForm({
         </section>
       </div>
 
-      {/* ── Order Summary Aside ─────────────────────────────── */}
+      {/* ── Order Summary Aside ────────────────────────────────── */}
       <aside className="h-fit space-y-5 border border-black/10 bg-white p-5 sm:p-6 lg:sticky lg:top-24">
         <div className="space-y-1">
           <p className="text-[11px] tracking-[0.14em] uppercase text-neutral-500">
@@ -496,7 +764,7 @@ export function CheckoutForm({
                     {item.detail} · Qty {item.quantity}
                   </p>
                 </div>
-                <p>{formatPrice(item.price * item.quantity)}</p>
+                <p className="shrink-0">{formatPrice(item.price * item.quantity)}</p>
               </div>
             ))
           )}
@@ -507,13 +775,28 @@ export function CheckoutForm({
             <span>Subtotal</span>
             <span>{formatPrice(subtotal)}</span>
           </div>
+
           <div className="flex items-center justify-between text-neutral-700">
             <span>Ongkir</span>
-            <span>{formatPrice(shippingFee)}</span>
+            {selectedRate ? (
+              <div className="text-right">
+                <span className="block">{formatPrice(selectedRate.price)}</span>
+                <span className="text-[10px] text-neutral-500">
+                  {selectedRate.courier_name} {selectedRate.courier_service_name}
+                </span>
+              </div>
+            ) : (
+              <span className="text-neutral-400 italic text-xs">
+                {destinationAreaId ? "Pilih kurir" : "Pilih area dulu"}
+              </span>
+            )}
           </div>
+
           <div className="flex items-center justify-between border-t border-black/10 pt-3 text-base">
             <span>Total</span>
-            <span className="font-medium">{formatPrice(total)}</span>
+            <span className="font-medium">
+              {selectedRate ? formatPrice(total) : "—"}
+            </span>
           </div>
         </div>
 
@@ -532,7 +815,7 @@ export function CheckoutForm({
 
         <Button
           type="button"
-          disabled={isPaying || orderItems.length === 0}
+          disabled={isPaying || orderItems.length === 0 || !selectedRate}
           onClick={handlePay}
           className="h-11 w-full bg-neutral-900 text-[11px] tracking-[0.14em] text-white uppercase hover:bg-neutral-800 disabled:opacity-50"
         >
@@ -542,6 +825,12 @@ export function CheckoutForm({
             ? "Lanjut ke Pembayaran"
             : "Buat Pesanan"}
         </Button>
+
+        {!selectedRate && orderItems.length > 0 && (
+          <p className="text-center text-xs text-neutral-400">
+            Pilih kurir untuk melanjutkan
+          </p>
+        )}
       </aside>
     </>
   )

@@ -90,6 +90,11 @@ export async function POST(request: NextRequest) {
       shipping_city: String(data.shipping_city),
       shipping_province: String(data.shipping_province),
       shipping_postal_code: String(data.shipping_postal_code),
+      // Biteship fields (optional — set when Biteship is used at checkout)
+      courier: data.courier ? String(data.courier) : null,
+      courier_code: data.courier_code ? String(data.courier_code) : null,
+      shipping_service: data.shipping_service ? String(data.shipping_service) : null,
+      destination_area_id: data.destination_area_id ? String(data.destination_area_id) : null,
       items: (data.items as Record<string, unknown>[]).map((item) => ({
         product_id: String(item.product_id ?? ""),
         product_name: String(item.product_name ?? ""),

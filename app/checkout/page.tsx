@@ -7,9 +7,6 @@ import {
 
 export const dynamic = "force-dynamic"
 
-/** Ongkir dalam Rupiah */
-const shippingFee = 25_000
-
 export default async function CheckoutPage() {
   const midtransEnabled = isMidtransConfigured()
 
@@ -26,7 +23,7 @@ export default async function CheckoutPage() {
 
       <section className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 sm:px-6 sm:py-10 lg:grid-cols-[1fr_360px] lg:items-start lg:gap-10">
         <CheckoutForm
-          shippingFee={shippingFee}
+          shippingFee={0}
           midtransEnabled={midtransEnabled}
           midtransClientKey={
             midtransEnabled

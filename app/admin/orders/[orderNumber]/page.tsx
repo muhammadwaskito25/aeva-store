@@ -538,6 +538,17 @@ export default function AdminOrderDetailPage() {
                 </p>
                 <p>Indonesia</p>
               </div>
+              {/* Biteship service info */}
+              {order.shipping_service && (
+                <div className="mt-3 border-t border-neutral-100 pt-3">
+                  <p className="text-xs tracking-[0.08em] uppercase text-neutral-500">
+                    Layanan Pengiriman
+                  </p>
+                  <p className="mt-1 text-sm font-medium">
+                    {order.courier} — {order.shipping_service}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Customer Note */}

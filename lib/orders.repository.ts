@@ -61,7 +61,11 @@ function mapOrderRow(row: Record<string, unknown>): Order {
     shipping_province: String(row.shipping_province ?? ""),
     shipping_postal_code: String(row.shipping_postal_code ?? ""),
     courier: (row.courier as string | null) ?? null,
+    courier_code: (row.courier_code as string | null) ?? null,
+    shipping_service: (row.shipping_service as string | null) ?? null,
     tracking_number: (row.tracking_number as string | null) ?? null,
+    origin_area_id: (row.origin_area_id as string | null) ?? null,
+    destination_area_id: (row.destination_area_id as string | null) ?? null,
     midtrans_transaction_id: (row.midtrans_transaction_id as string | null) ?? null,
     midtrans_payment_type: (row.midtrans_payment_type as string | null) ?? null,
     midtrans_metadata: (row.midtrans_metadata as Record<string, unknown> | null) ?? null,
@@ -145,6 +149,12 @@ export async function createOrder(
       shipping_city: payload.shipping_city,
       shipping_province: payload.shipping_province,
       shipping_postal_code: payload.shipping_postal_code,
+      // Biteship fields
+      courier: payload.courier ?? null,
+      courier_code: payload.courier_code ?? null,
+      shipping_service: payload.shipping_service ?? null,
+      origin_area_id: process.env.BITESHIP_ORIGIN_AREA_ID ?? null,
+      destination_area_id: payload.destination_area_id ?? null,
     })
     .select("id, order_number")
     .single()

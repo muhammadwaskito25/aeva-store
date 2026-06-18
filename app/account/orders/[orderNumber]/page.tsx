@@ -275,7 +275,7 @@ export default function OrderDetailPage() {
                 />
               </div>
 
-              {/* Tracking Info */}
+              {/* Shipping Info from Biteship */}
               {(order.courier || order.tracking_number) && (
                 <div className="mt-4 rounded-xl border border-neutral-100 bg-neutral-50 p-4">
                   <p className="text-xs tracking-[0.1em] uppercase text-neutral-500">
@@ -284,6 +284,11 @@ export default function OrderDetailPage() {
                   {order.courier && (
                     <p className="mt-1 text-sm font-medium">
                       Kurir: {order.courier}
+                      {order.shipping_service && (
+                        <span className="ml-1.5 font-normal text-neutral-500">
+                          — {order.shipping_service}
+                        </span>
+                      )}
                     </p>
                   )}
                   {order.tracking_number && (
