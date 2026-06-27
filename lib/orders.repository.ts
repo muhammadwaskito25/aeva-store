@@ -343,3 +343,51 @@ export async function updateOrderStatus(
 
   return mapOrderRow(data as Record<string, unknown>)
 }
+
+/**
+ * Update order Midtrans data from webhook notifications.
+ */
+export async function updateOrderMidtransData(
+  orderNumber: string,
+  payload: {
+    payment_status: import("@/lib/orders").PaymentStatus
+    midtrans_transaction_id?: string
+    midtrans_payment_type?: string
+    midtrans_metadata?: Record<string, unknown>
+  }
+): Promise<Order | null> {
+  const supabase = createServiceRoleClient()
+
+  const timelineUpdates: Record<string, string | null> = {}
+  if (payload.payment_status === "Paid") {
+    timelineUpdates.paid_at = new Date().toISOString()
+  } else if (payload.payment_status === "Pending") {
+    timelineUpdates.paid_at = null
+  }
+
+  const { data, error } = await supabase
+    .from("orders")
+    .update({
+      payment_status: payload.payment_status,
+      ...(payload.midtrans_transaction_id && {
+        midtrans_transaction_id: payload.midtrans_transaction_id,
+      }),
+      ...(payload.midtrans_payment_type && {
+        midtrans_payment_type: payload.midtrans_payment_type,
+      }),
+      ...(payload.midtrans_metadata && {
+        midtrans_metadata: payload.midtrans_metadata,
+      }),
+      ...timelineUpdates,
+    })
+    .eq("order_number", orderNumber)
+    .select("*, order_items(*)")
+    .single()
+
+  if (error) {
+    console.error("[orders] updateOrderMidtransData:", error.message)
+    return null
+  }
+
+  return mapOrderRow(data as Record<string, unknown>)
+}

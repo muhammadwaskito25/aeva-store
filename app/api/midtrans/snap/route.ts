@@ -21,6 +21,7 @@ type SnapRequestBody = {
   items: SnapItem[]
   shipping: number
   customer: SnapCustomer
+  orderNumber: string
 }
 
 export async function POST(request: NextRequest) {
@@ -46,9 +47,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = (await request.json()) as SnapRequestBody
-    const { items, shipping, customer } = body
+    const { items, shipping, customer, orderNumber } = body
 
-    if (!items?.length || !customer?.email) {
+    if (!items?.length || !customer?.email || !orderNumber) {
       return NextResponse.json(
         { error: "Data pesanan atau customer tidak lengkap." },
         { status: 400 }
@@ -75,13 +76,12 @@ export async function POST(request: NextRequest) {
       0
     )
 
-    const orderId = `AEVA-${Date.now()}`
     const baseUrl = getAppBaseUrl()
     const snap = getSnapClient()
 
     const transaction = await snap.createTransaction({
       transaction_details: {
-        order_id: orderId,
+        order_id: orderNumber,
         gross_amount: grossAmount,
       },
       item_details: itemDetails,
@@ -92,13 +92,13 @@ export async function POST(request: NextRequest) {
         phone: customer.phone || "08123456789",
       },
       callbacks: {
-        finish: `${baseUrl}/checkout/success?order_id=${orderId}`,
+        finish: `${baseUrl}/checkout/success?order_id=${orderNumber}`,
       },
     })
 
     return NextResponse.json({
       token: transaction.token,
-      orderId,
+      orderId: orderNumber,
     })
   } catch (error) {
     console.error("[midtrans/snap]", error)
