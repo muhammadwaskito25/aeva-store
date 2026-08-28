@@ -3,6 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
+import { useState, useEffect } from "react"
 
 import type { ProductHref } from "@/lib/products"
 import { luxuryEase } from "@/lib/motion"
@@ -29,6 +30,11 @@ export function ProductCard({
   className,
 }: ProductCardProps) {
   const reduceMotion = useReducedMotion()
+  const [imgSrc, setImgSrc] = useState(imageSrc)
+
+  useEffect(() => {
+    setImgSrc(imageSrc)
+  }, [imageSrc])
 
   return (
     <motion.article
@@ -52,9 +58,10 @@ export function ProductCard({
         {/* ── Product Image ───────────────────────────────────── */}
         <div className="relative aspect-[3/4] overflow-hidden bg-[#f2ece2] md:aspect-[4/5]">
           <Image
-            src={imageSrc}
+            src={imgSrc || "/placeholder-image.png"}
             alt={imageAlt}
             fill
+            onError={() => setImgSrc("/placeholder-image.png")}
             sizes="(max-width: 768px) 45vw, (max-width: 1024px) 50vw, 25vw"
             className={cn(
               "object-cover transition-all duration-700 ease-out",

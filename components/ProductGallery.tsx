@@ -24,6 +24,7 @@ export function ProductGallery({ images, fallbackImage, alt }: Props) {
 
   const [activeIndex, setActiveIndex] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [errorImages, setErrorImages] = useState<Set<string>>(new Set())
   const swipeStartX = useRef<number | null>(null)
   const swipeStartY = useRef<number | null>(null)
   const heroRef = useRef<HTMLDivElement>(null)
@@ -118,9 +119,10 @@ export function ProductGallery({ images, fallbackImage, alt }: Props) {
             )}
           >
             <Image
-              src={img.url}
+              src={errorImages.has(img.id) ? "/placeholder-image.png" : img.url}
               alt={i === 0 ? alt : `${alt} — image ${i + 1}`}
               fill
+              onError={() => setErrorImages((prev) => new Set(prev).add(img.id))}
               priority={i === 0}
               sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover"
@@ -218,7 +220,7 @@ export function ProductGallery({ images, fallbackImage, alt }: Props) {
               )}
             >
               <Image
-                src={img.url}
+                src={errorImages.has(img.id) ? "/placeholder-image.png" : img.url}
                 alt={`Thumbnail ${i + 1}`}
                 fill
                 sizes="64px"

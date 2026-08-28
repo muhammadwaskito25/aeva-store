@@ -73,7 +73,7 @@ export default function AdminOrdersPage() {
 
     const verifyRes = await fetch("/api/admin/verify")
     if (!verifyRes.ok) {
-      router.replace("/")
+      setAuthError(true)
       return
     }
 

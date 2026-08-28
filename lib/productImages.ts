@@ -126,7 +126,7 @@ export async function uploadProductImage(
   const { data, error: insertError } = await supabase
     .from("product_images")
     .insert({
-      product_id: Number(productId),
+      product_id: productId,
       storage_path: storagePath,
       url,
       display_order: displayOrder,
@@ -145,7 +145,7 @@ export async function uploadProductImage(
     await supabase
       .from("products")
       .update({ image: url })
-      .eq("id", Number(productId))
+      .eq("id", productId)
   }
 
   return data as ProductImage
@@ -221,5 +221,5 @@ async function reassignOrders(
   await supabase
     .from("products")
     .update({ image: coverUrl })
-    .eq("id", Number(productId))
+    .eq("id", productId)
 }

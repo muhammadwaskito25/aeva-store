@@ -43,6 +43,9 @@ type AdminProduct = {
   description: string
   image: string
   category: string
+  sizes: string[]
+  colors: string[]
+  featured: boolean
 }
 
 type ProductFormState = {
@@ -51,6 +54,9 @@ type ProductFormState = {
   price: string
   category: string
   description: string
+  sizes: string
+  colors: string
+  featured: boolean
 }
 
 const emptyForm: ProductFormState = {
@@ -59,6 +65,9 @@ const emptyForm: ProductFormState = {
   price: "",
   category: "",
   description: "",
+  sizes: "",
+  colors: "",
+  featured: false,
 }
 
 const inputClassName =
@@ -85,6 +94,13 @@ function formatError(err: unknown, fallback: string): string {
   return fallback
 }
 
+function normalizeStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === "string")
+  }
+  return []
+}
+
 function mapRow(row: Record<string, unknown>): AdminProduct | null {
   const id = row.id != null ? String(row.id) : ""
   const title = row.title != null ? String(row.title) : ""
@@ -98,6 +114,9 @@ function mapRow(row: Record<string, unknown>): AdminProduct | null {
     description: String(row.description ?? ""),
     image: String(row.image ?? ""),
     category: String(row.category ?? ""),
+    sizes: normalizeStringArray(row.sizes),
+    colors: normalizeStringArray(row.colors),
+    featured: Boolean(row.featured ?? false),
   }
 }
 
@@ -108,6 +127,9 @@ function productToForm(product: AdminProduct): ProductFormState {
     price: String(product.price),
     category: product.category,
     description: product.description,
+    sizes: product.sizes.join(", "),
+    colors: product.colors.join(", "),
+    featured: product.featured,
   }
 }
 
@@ -359,12 +381,15 @@ export default function AdminPage() {
     const price = Number(form.price)
     const category = form.category.trim()
     const description = form.description.trim()
+    const sizes = form.sizes.split(",").map((s) => s.trim()).filter(Boolean)
+    const colors = form.colors.split(",").map((c) => c.trim()).filter(Boolean)
+    const featured = form.featured
 
     if (!title || !slug || !category || Number.isNaN(price) || price < 0) {
       throw new Error("Lengkapi title, slug, price, dan category.")
     }
 
-    return { title, slug, price, category, description }
+    return { title, slug, price, category, description, sizes, colors, featured }
   }
 
   // ── Add product ───────────────────────────────────────
@@ -659,6 +684,18 @@ export default function AdminPage() {
             ) : null}
             <p className="text-sm text-neutral-500">{products.length} produk</p>
             <a
+              href="/admin"
+              className="inline-flex h-10 items-center rounded-xl border border-neutral-900 bg-neutral-900 px-4 text-[11px] tracking-[0.14em] uppercase text-white transition"
+            >
+              Produk
+            </a>
+            <a
+              href="/admin/settings"
+              className="inline-flex h-10 items-center rounded-xl border border-neutral-200 px-4 text-[11px] tracking-[0.14em] uppercase text-neutral-700 transition hover:border-neutral-400"
+            >
+              Pengaturan
+            </a>
+            <a
               href="/admin/orders"
               className="inline-flex h-10 items-center rounded-xl border border-neutral-200 px-4 text-[11px] tracking-[0.14em] uppercase text-neutral-700 transition hover:border-neutral-400"
             >
@@ -795,6 +832,51 @@ export default function AdminPage() {
               />
             </label>
 
+            {/* Sizes */}
+            <label className="block space-y-2">
+              <span className="text-xs font-medium tracking-[0.14em] uppercase text-neutral-500">
+                Sizes (comma separated)
+              </span>
+              <input
+                className={inputClassName}
+                value={form.sizes}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, sizes: e.target.value }))
+                }
+                placeholder="S, M, L, XL"
+              />
+            </label>
+
+            {/* Colors */}
+            <label className="block space-y-2">
+              <span className="text-xs font-medium tracking-[0.14em] uppercase text-neutral-500">
+                Colors (comma separated)
+              </span>
+              <input
+                className={inputClassName}
+                value={form.colors}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, colors: e.target.value }))
+                }
+                placeholder="Navy, Cream, Sage"
+              />
+            </label>
+
+            {/* Featured */}
+            <label className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                className="size-5 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900"
+                checked={form.featured}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, featured: e.target.checked }))
+                }
+              />
+              <span className="text-sm font-medium text-neutral-700">
+                Tampilkan di Homepage (Featured)
+              </span>
+            </label>
+
             {/* Actions */}
             <div className="flex flex-col gap-2">
               <Button
@@ -916,7 +998,21 @@ export default function AdminPage() {
                       {product.description || "—"}
                     </p>
 
-                    <div className="grid grid-cols-2 gap-2">
+                    {(product.sizes.length > 0 || product.colors.length > 0) && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {product.sizes.map(s => (
+                          <span key={`size-${s}`} className="px-1.5 py-0.5 rounded-sm bg-neutral-100 text-[10px] text-neutral-600 border border-neutral-200">{s}</span>
+                        ))}
+                        {product.colors.map(c => (
+                          <span key={`color-${c}`} className="px-1.5 py-0.5 rounded-sm bg-neutral-100 text-[10px] text-neutral-600 border border-neutral-200">{c}</span>
+                        ))}
+                        {product.featured && (
+                          <span className="px-1.5 py-0.5 rounded-sm bg-yellow-100 text-[10px] text-yellow-700 border border-yellow-200">Featured</span>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-2 mt-2">
                       <Button
                         type="button"
                         variant="outline"
@@ -935,6 +1031,15 @@ export default function AdminPage() {
                       >
                         <Trash2 className="size-3.5" />
                         {deletingId === product.id ? "…" : "Delete"}
+                      </Button>
+                      <Button
+                        asChild
+                        variant="outline"
+                        className="col-span-2 h-10 rounded-xl border-neutral-300 text-[11px] tracking-[0.14em] uppercase hover:bg-neutral-100"
+                      >
+                        <a href={`/products/${product.slug}`} target="_blank" rel="noopener noreferrer">
+                          Preview Product
+                        </a>
                       </Button>
                     </div>
                   </div>

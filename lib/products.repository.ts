@@ -93,9 +93,30 @@ export async function fetchProducts(): Promise<Product[]> {
   return mapped
 }
 
-/** Returns all products (no featured filter). */
 export async function fetchFeaturedProducts(): Promise<Product[]> {
-  return fetchProducts()
+  if (!isSupabaseConfigured()) {
+    return []
+  }
+
+  const supabase = createSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("*, product_images(id, product_id, storage_path, url, display_order)")
+    .eq("featured", true)
+    .order("title", { ascending: true })
+
+  if (error) {
+    console.error("[products] fetchFeaturedProducts failed:", error.message, error)
+    return []
+  }
+
+  const mapped =
+    (data as Record<string, unknown>[] | null)
+      ?.map(mapProductRow)
+      .filter((product): product is Product => product !== null) ?? []
+
+  return mapped
 }
 
 export async function fetchProductBySlug(

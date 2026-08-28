@@ -21,9 +21,10 @@ import { useCart } from "@/lib/cart"
 
 type HomePageProps = {
   featuredProducts: Product[]
+  heroImageUrl: string
 }
 
-export function HomePage({ featuredProducts }: HomePageProps) {
+export function HomePage({ featuredProducts, heroImageUrl }: HomePageProps) {
   const { addToCart, openCart } = useCart()
 
   const handleAddToCart = (product: Product) => {
@@ -37,53 +38,55 @@ export function HomePage({ featuredProducts }: HomePageProps) {
 
       <section
         id="home"
-        className="mx-auto grid w-full max-w-6xl scroll-mt-20 gap-8 px-4 py-8 sm:scroll-mt-24 sm:gap-6 sm:px-6 sm:py-14 md:grid-cols-2 md:items-center md:py-20"
+        className="relative w-full aspect-[16/9] max-h-[70vh] min-h-[500px] overflow-hidden bg-[#ebe6dc] flex items-center justify-center text-center"
       >
-        <FadeIn className="order-2 space-y-6 sm:space-y-8 md:order-1">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src={heroImageUrl}
+            alt="Model posing with AEVA scarf draping gracefully"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover transition-transform duration-[1200ms] ease-out hover:scale-[1.015]"
+          />
+          {/* Overlay to ensure text readability */}
+          <div className="absolute inset-0 bg-black/20" />
+        </div>
+
+        {/* Text Content Overlay */}
+        <FadeIn className="relative z-10 space-y-6 sm:space-y-8 px-4 max-w-3xl mx-auto mt-16 md:mt-0">
           <div className="space-y-3 sm:space-y-4">
-            <p className="text-[11px] font-medium tracking-[0.3em] uppercase text-neutral-500">
+            <p className="text-[11px] font-semibold tracking-[0.3em] uppercase text-white drop-shadow-md">
               Solids Viscose Series
             </p>
-            <h1 className="font-heading text-4xl leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
+            <h1 className="font-heading text-4xl leading-[1.1] tracking-tight sm:text-5xl lg:text-7xl text-white drop-shadow-lg">
               Quiet Luxury,
               <br />
               Gentle Drape
             </h1>
-            <p className="max-w-md text-sm leading-relaxed text-neutral-700 sm:text-base">
+            <p className="max-w-lg mx-auto text-sm leading-relaxed text-white/90 sm:text-base drop-shadow-md">
               A curated line of refined, soft scarves and modestwear essentials
               crafted for understated elegance in daily rituals.
             </p>
           </div>
 
-          <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-center">
             <Button
               asChild
-              className="h-12 bg-neutral-900 px-8 text-[11px] tracking-[0.16em] text-white uppercase hover:bg-neutral-800"
+              className="h-12 bg-white px-8 text-[11px] tracking-[0.16em] text-black uppercase hover:bg-white/90"
             >
               <Link href="#collection">Shop the Collection</Link>
             </Button>
             <Button
               asChild
               variant="outline"
-              className="h-12 border-black/15 bg-transparent px-8 text-[11px] tracking-[0.16em] text-neutral-800 uppercase hover:bg-black/5"
+              className="h-12 border-white/50 bg-black/20 backdrop-blur-sm px-8 text-[11px] tracking-[0.16em] text-white uppercase hover:bg-black/40 hover:border-white"
             >
               <Link href="/about">Our Story</Link>
             </Button>
           </div>
         </FadeIn>
-
-        <div className="order-1 md:order-2">
-          <FadeIn className="relative aspect-[4/5] w-full overflow-hidden bg-[#ebe6dc] md:aspect-[5/6]">
-            <Image
-              src="/hero.png"
-              alt="Model posing with AEVA scarf draping gracefully"
-              fill
-              priority
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover object-[50%_35%] transition-transform duration-[1200ms] ease-out hover:scale-[1.015]"
-            />
-          </FadeIn>
-        </div>
       </section>
 
       <section
