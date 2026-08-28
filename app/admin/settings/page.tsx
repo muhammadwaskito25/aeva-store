@@ -208,7 +208,7 @@ export default function AdminSettingsPage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
+                  accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                   className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
                   onChange={handleHeroUpload}
                   disabled={saving || loading}

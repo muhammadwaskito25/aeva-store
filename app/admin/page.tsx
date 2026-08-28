@@ -188,7 +188,7 @@ function ImageManager({
         ref={fileInputRef}
         type="file"
         multiple
-        accept="image/jpeg,image/png,image/webp"
+        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
         className="hidden"
         onChange={(e) => e.target.files && onUpload(e.target.files)}
       />
