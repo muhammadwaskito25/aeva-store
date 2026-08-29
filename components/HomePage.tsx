@@ -22,9 +22,10 @@ import { useCart } from "@/lib/cart"
 type HomePageProps = {
   featuredProducts: Product[]
   heroImageUrl: string
+  heroImagePosition: string
 }
 
-export function HomePage({ featuredProducts, heroImageUrl }: HomePageProps) {
+export function HomePage({ featuredProducts, heroImageUrl, heroImagePosition }: HomePageProps) {
   const { addToCart, openCart } = useCart()
 
   const handleAddToCart = (product: Product) => {
@@ -48,6 +49,7 @@ export function HomePage({ featuredProducts, heroImageUrl }: HomePageProps) {
             fill
             priority
             sizes="100vw"
+            style={{ objectPosition: heroImagePosition }}
             className="object-cover transition-transform duration-[1200ms] ease-out hover:scale-[1.015]"
           />
           {/* Overlay to ensure text readability */}

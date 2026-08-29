@@ -19,7 +19,10 @@ export async function getSiteSettings(): Promise<Record<string, string>> {
   return settings
 }
 
-export async function getHeroImageUrl(): Promise<string> {
+export async function getHeroSettings(): Promise<{ url: string; position: string }> {
   const settings = await getSiteSettings()
-  return settings.hero_image_url || "/hero.png"
+  return {
+    url: settings.hero_image_url || "/hero.png",
+    position: settings.hero_image_position || "center center",
+  }
 }

@@ -13,6 +13,7 @@ export default function AdminSettingsPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [authError, setAuthError] = useState(false)
   const [heroImageUrl, setHeroImageUrl] = useState<string>("")
+  const [heroImagePosition, setHeroImagePosition] = useState<string>("center center")
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -50,6 +51,7 @@ export default function AdminSettingsPage() {
       if (res.ok) {
         const data = await res.json()
         setHeroImageUrl(data.hero_image_url || "")
+        setHeroImagePosition(data.hero_image_position || "center center")
       }
     } catch (err) {
       console.error(err)
@@ -106,6 +108,29 @@ export default function AdminSettingsPage() {
     } finally {
       setSaving(false)
       if (fileInputRef.current) fileInputRef.current.value = ""
+    }
+  }
+
+  async function handlePositionChange(position: string) {
+    setHeroImagePosition(position)
+    setSaving(true)
+    setError(null)
+    setMessage(null)
+
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "hero_image_position", value: position })
+      })
+
+      if (!res.ok) throw new Error("Gagal menyimpan ke database.")
+
+      setMessage("Posisi gambar berhasil diperbarui.")
+    } catch (err: any) {
+      setError(err.message || "Gagal menyimpan posisi gambar.")
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -190,6 +215,7 @@ export default function AdminSettingsPage() {
                   src={heroImageUrl}
                   alt="Hero Image"
                   fill
+                  style={{ objectPosition: heroImagePosition }}
                   className="object-cover"
                 />
               ) : (
@@ -200,7 +226,26 @@ export default function AdminSettingsPage() {
               )}
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <label className="flex flex-col gap-1.5 w-full sm:w-auto">
+                <span className="text-[11px] font-medium tracking-[0.14em] uppercase text-neutral-500">
+                  Fokus Gambar (Position)
+                </span>
+                <select
+                  disabled={saving || loading}
+                  value={heroImagePosition}
+                  onChange={(e) => handlePositionChange(e.target.value)}
+                  className="h-10 w-full sm:w-64 rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none transition focus:border-neutral-900"
+                >
+                  <option value="center top">Atas (Top)</option>
+                  <option value="center center">Tengah (Center)</option>
+                  <option value="center bottom">Bawah (Bottom)</option>
+                  <option value="left center">Kiri Tengah (Left)</option>
+                  <option value="right center">Kanan Tengah (Right)</option>
+                  <option value="50% 35%">Custom (Agak Atas)</option>
+                </select>
+              </label>
+
               <Button
                 disabled={saving || loading}
                 className="relative h-10 w-full sm:w-auto overflow-hidden rounded-xl bg-neutral-900 px-6 text-[11px] tracking-[0.14em] text-white uppercase hover:bg-neutral-800"
