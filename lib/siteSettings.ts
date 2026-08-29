@@ -83,6 +83,7 @@ export type AboutLookbook = {
   url: string
   alt: string
   position: string
+  ratio?: string
 }
 
 export type AboutTestimonial = {
@@ -95,10 +96,12 @@ export type AboutTestimonial = {
 export type AboutSettings = {
   about_hero_image: string
   about_hero_position: string
+  about_hero_ratio: string
   about_hero_title: string
   about_hero_text: string
   about_story_image: string
   about_story_position: string
+  about_story_ratio: string
   about_story_title: string
   about_story_text: string
   about_values: AboutValue[]
@@ -126,9 +129,9 @@ export async function getAboutSettings(): Promise<AboutSettings> {
   ]
 
   const defaultLookbook: AboutLookbook[] = [
-    { id: "lb1", url: "/hero.png", alt: "AÉVA editorial — neutral tones", position: "50% 50%" },
-    { id: "lb2", url: "/about2.jpg", alt: "Silk drape detail", position: "50% 50%" },
-    { id: "lb3", url: "/about3.jpg", alt: "Soft fold styling", position: "50% 50%" },
+    { id: "lb1", url: "/hero.png", alt: "AÉVA editorial — neutral tones", position: "50% 50%", ratio: "aspect-[4/5]" },
+    { id: "lb2", url: "/about2.jpg", alt: "Silk drape detail", position: "50% 50%", ratio: "aspect-[5/4]" },
+    { id: "lb3", url: "/about3.jpg", alt: "Soft fold styling", position: "50% 50%", ratio: "aspect-[5/4]" },
   ]
 
   const defaultTestimonials: AboutTestimonial[] = [
@@ -139,10 +142,12 @@ export async function getAboutSettings(): Promise<AboutSettings> {
   return {
     about_hero_image: settings.about_hero_image || "/about4.jpg",
     about_hero_position: settings.about_hero_position || "50% 50%",
+    about_hero_ratio: settings.about_hero_ratio || "min-h-[78vh]",
     about_hero_title: settings.about_hero_title || "Crafted for\nQuiet Elegance",
     about_hero_text: settings.about_hero_text || "AÉVA crafts refined scarves for modern women who value softness, simplicity, and timeless drape. Founded by women, for women — every scarf is a quiet declaration of strength, grace, and the freedom to wear on your own terms.",
     about_story_image: settings.about_story_image || "/about.png",
     about_story_position: settings.about_story_position || "50% 50%",
+    about_story_ratio: settings.about_story_ratio || "aspect-[4/5]",
     about_story_title: settings.about_story_title || "An effortless presence",
     about_story_text: settings.about_story_text || "AÉVA was born from a simple belief — that scarves should feel timeless, effortless, and made for every woman. We wanted to create pieces that are easy to wear, soft in presence, and naturally elegant without feeling excessive.\n\nThrough refined fabrics, neutral tones, and thoughtful simplicity, each scarf is designed to become a part of everyday moments — comfortable, versatile, and quietly beautiful.\n\nMade for every woman, every style, and every season.",
     about_values: safeParseJSON<AboutValue[]>(settings.about_values, defaultValues),

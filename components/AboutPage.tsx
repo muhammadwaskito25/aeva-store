@@ -75,7 +75,7 @@ export function AboutPage({ settings }: { settings: AboutSettings }) {
       <Navbar />
 
       {/* SECTION 1 — HERO */}
-      <section className="relative min-h-[78vh] overflow-hidden sm:min-h-[82vh] lg:min-h-[88vh]">
+      <section className={`relative overflow-hidden ${settings.about_hero_ratio === 'min-h-[78vh]' ? 'min-h-[78vh] sm:min-h-[82vh] lg:min-h-[88vh]' : settings.about_hero_ratio}`}>
         <Image
           src={settings.about_hero_image}
           alt="AÉVA — quiet elegance editorial"
@@ -90,7 +90,7 @@ export function AboutPage({ settings }: { settings: AboutSettings }) {
           aria-hidden
         />
 
-        <div className="relative mx-auto flex min-h-[78vh] w-full max-w-6xl flex-col justify-end px-5 pb-14 pt-28 sm:min-h-[82vh] sm:px-8 sm:pb-20 sm:pt-32 lg:min-h-[88vh] lg:pb-24 lg:px-10">
+        <div className={`relative mx-auto flex w-full max-w-6xl flex-col justify-end px-5 pb-14 pt-28 sm:px-8 sm:pb-20 sm:pt-32 lg:pb-24 lg:px-10 ${settings.about_hero_ratio === 'min-h-[78vh]' ? 'min-h-[78vh] sm:min-h-[82vh] lg:min-h-[88vh]' : 'h-full min-h-[50vh]'}`}>
           <FadeIn inView={false} className="max-w-3xl space-y-4 sm:space-y-5">
             <p className="text-[11px] font-medium tracking-[0.3em] text-white/75 uppercase">
               Brand Story
@@ -109,7 +109,7 @@ export function AboutPage({ settings }: { settings: AboutSettings }) {
       <section className="border-t border-black/[0.05] bg-[#f8f5ef]">
         <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-14 sm:gap-12 sm:px-8 sm:py-28 lg:grid-cols-2 lg:items-center lg:gap-16 lg:px-10">
           <FadeIn className="relative order-2 lg:order-1">
-            <div className="relative aspect-[4/5] overflow-hidden bg-[#ebe6dc]">
+            <div className={`relative overflow-hidden bg-[#ebe6dc] ${settings.about_story_ratio}`}>
               <Image
                 src={settings.about_story_image}
                 alt="AÉVA creative director portrait"
@@ -205,25 +205,16 @@ export function AboutPage({ settings }: { settings: AboutSettings }) {
           </FadeIn>
 
           <motion.div
-            className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-12 md:grid-rows-2"
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3"
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-40px" }}
           >
             {settings.about_lookbook?.map((img, index) => {
-              // Assign masonry classes cyclically
-              const m = index % 3
-              let className = "md:col-span-5"
-              let aspect = "aspect-[5/4]"
-              
-              if (m === 0) {
-                className = "md:col-span-7 md:row-span-2"
-                aspect = "aspect-[4/5] min-h-[280px] md:aspect-auto md:min-h-[520px]"
-              }
-              
+              const aspect = img.ratio || "aspect-square"
               return (
-                <motion.div key={img.id} variants={fadeUp} className={className}>
+                <motion.div key={img.id} variants={fadeUp} className="w-full">
                   <EditorialImage
                     src={img.url}
                     alt={img.alt}
