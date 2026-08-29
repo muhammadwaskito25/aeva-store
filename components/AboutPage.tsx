@@ -75,7 +75,19 @@ export function AboutPage({ settings }: { settings: AboutSettings }) {
       <Navbar />
 
       {/* SECTION 1 — HERO */}
-      <section className={`relative overflow-hidden ${settings.about_hero_ratio === 'min-h-[78vh]' ? 'min-h-[78vh] sm:min-h-[82vh] lg:min-h-[88vh]' : settings.about_hero_ratio}`}>
+      {(() => {
+        const ratio = settings.about_hero_ratio || 'min-h-[78vh]'
+        const isFullBleed = ratio === 'min-h-[78vh]' || ratio === 'aspect-video' || ratio === 'aspect-auto'
+        
+        return (
+          <div className={isFullBleed ? "" : "px-4 sm:px-8 py-4 sm:py-8 lg:px-10"}>
+            <section 
+              className={cn(
+                "relative overflow-hidden",
+                ratio === 'min-h-[78vh]' ? 'min-h-[78vh] sm:min-h-[82vh] lg:min-h-[88vh]' : ratio,
+                isFullBleed ? "w-full" : "mx-auto w-full max-w-4xl rounded-2xl shadow-sm"
+              )}
+            >
         <Image
           src={settings.about_hero_image}
           alt="AÉVA — quiet elegance editorial"
@@ -90,8 +102,13 @@ export function AboutPage({ settings }: { settings: AboutSettings }) {
           aria-hidden
         />
 
-        <div className={`relative mx-auto flex w-full max-w-6xl flex-col justify-end px-5 pb-14 pt-28 sm:px-8 sm:pb-20 sm:pt-32 lg:pb-24 lg:px-10 ${settings.about_hero_ratio === 'min-h-[78vh]' ? 'min-h-[78vh] sm:min-h-[82vh] lg:min-h-[88vh]' : 'h-full min-h-[50vh]'}`}>
-          <FadeIn inView={false} className="max-w-3xl space-y-4 sm:space-y-5">
+            <div className={cn(
+              "relative mx-auto flex w-full flex-col justify-end",
+              ratio === 'min-h-[78vh]' 
+                ? "max-w-6xl px-5 pb-14 pt-28 sm:px-8 sm:pb-20 sm:pt-32 lg:pb-24 lg:px-10 min-h-[78vh] sm:min-h-[82vh] lg:min-h-[88vh]" 
+                : "h-full min-h-[50vh] px-5 pb-10 pt-20 sm:px-10 sm:pb-12"
+            )}>
+              <FadeIn inView={false} className="max-w-3xl space-y-4 sm:space-y-5">
             <p className="text-[11px] font-medium tracking-[0.3em] text-white/75 uppercase">
               Brand Story
             </p>
@@ -101,9 +118,12 @@ export function AboutPage({ settings }: { settings: AboutSettings }) {
             <p className="max-w-lg text-[15px] leading-[1.75] text-white/90 sm:text-base sm:leading-relaxed whitespace-pre-wrap">
               {settings.about_hero_text}
             </p>
-          </FadeIn>
+              </FadeIn>
+            </div>
+          </section>
         </div>
-      </section>
+        )
+      })()}
 
       {/* SECTION 2 — BRAND STORY */}
       <section className="border-t border-black/[0.05] bg-[#f8f5ef]">
