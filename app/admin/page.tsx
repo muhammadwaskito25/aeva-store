@@ -693,7 +693,13 @@ export default function AdminPage() {
               href="/admin/settings"
               className="inline-flex h-10 items-center rounded-xl border border-neutral-200 px-4 text-[11px] tracking-[0.14em] uppercase text-neutral-700 transition hover:border-neutral-400"
             >
-              Pengaturan
+              Pengaturan Utama
+            </a>
+            <a
+              href="/admin/about"
+              className="inline-flex h-10 items-center rounded-xl border border-neutral-200 px-4 text-[11px] tracking-[0.14em] uppercase text-neutral-700 transition hover:border-neutral-400"
+            >
+              Halaman About
             </a>
             <a
               href="/admin/orders"

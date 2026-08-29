@@ -158,13 +158,31 @@ export default function AdminOrdersPage() {
               {orders.length} total pesanan
             </p>
           </div>
-          <div className="flex gap-3">
-            <Link
+          <div className="flex flex-wrap items-center gap-3">
+            <a
               href="/admin"
-              className="inline-flex h-10 items-center rounded-xl border border-neutral-200 bg-white px-4 text-[11px] tracking-[0.1em] uppercase text-neutral-700 transition hover:border-neutral-400"
+              className="inline-flex h-10 items-center rounded-xl border border-neutral-200 px-4 text-[11px] tracking-[0.14em] uppercase text-neutral-700 transition hover:border-neutral-400"
             >
-              ← Products
-            </Link>
+              Produk
+            </a>
+            <a
+              href="/admin/settings"
+              className="inline-flex h-10 items-center rounded-xl border border-neutral-200 px-4 text-[11px] tracking-[0.14em] uppercase text-neutral-700 transition hover:border-neutral-400"
+            >
+              Pengaturan Utama
+            </a>
+            <a
+              href="/admin/about"
+              className="inline-flex h-10 items-center rounded-xl border border-neutral-200 px-4 text-[11px] tracking-[0.14em] uppercase text-neutral-700 transition hover:border-neutral-400"
+            >
+              Halaman About
+            </a>
+            <a
+              href="/admin/orders"
+              className="inline-flex h-10 items-center rounded-xl border border-neutral-900 bg-neutral-900 px-4 text-[11px] tracking-[0.14em] uppercase text-white transition"
+            >
+              Pesanan
+            </a>
           </div>
         </div>
       </header>
