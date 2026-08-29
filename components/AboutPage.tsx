@@ -3,7 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
-import { Feather, Sparkles, Sun } from "lucide-react"
+import { Feather, Sparkles, Sun, Star, Heart, Leaf, Diamond, Crown, Check, LucideIcon } from "lucide-react"
 
 import { FadeIn } from "@/components/FadeIn"
 import { Navbar } from "@/components/Navbar"
@@ -13,62 +13,17 @@ import { fadeUp, luxuryEase, staggerContainer } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import type { AboutSettings } from "@/lib/siteSettings"
 
-const values = [
-  {
-    title: "Timeless Design",
-    description:
-      "Silhouettes that transcend seasons — restrained, intentional, and made to feel relevant for years.",
-    icon: Sparkles,
-  },
-  {
-    title: "Soft Comfort",
-    description:
-      "Refined fabrics chosen for gentle drape and breathable wear, elevating everyday movement.",
-    icon: Feather,
-  },
-  {
-    title: "Everyday Elegance",
-    description:
-      "Quiet luxury for modern modestwear — polished enough for occasion, effortless for daily life.",
-    icon: Sun,
-  },
-] as const
-
-const lookbookImages = [
-  {
-    src: "/hero.png",
-    alt: "AÉVA editorial — neutral tones",
-    className: "md:col-span-7 md:row-span-2",
-    aspect: "aspect-[4/5] min-h-[280px] md:aspect-auto md:min-h-[520px]",
-  },
-  {
-    src: "/about2.jpg",
-    alt: "Silk drape detail",
-    className: "md:col-span-5",
-    aspect: "aspect-[5/4]",
-  },
-  {
-    src: "/about3.jpg",
-    alt: "Soft fold styling",
-    className: "md:col-span-5",
-    aspect: "aspect-[5/4]",
-  },
-] as const
-
-const testimonials = [
-  {
-    quote:
-      "AÉVA scarves feel incredibly refined. The fabric is light, graceful, and elevates every outfit.",
-    name: "Mina K.",
-    location: "Seoul",
-  },
-  {
-    quote:
-      "Minimal, elegant, and timeless. This is exactly the quiet luxury look I wanted.",
-    name: "Aiko T.",
-    location: "Tokyo",
-  },
-] as const
+const ICON_MAP: Record<string, LucideIcon> = {
+  "Sparkles": Sparkles,
+  "Feather": Feather,
+  "Sun": Sun,
+  "Star": Star,
+  "Heart": Heart,
+  "Leaf": Leaf,
+  "Diamond": Diamond,
+  "Crown": Crown,
+  "Check": Check,
+}
 
 function EditorialImage({
   src,
@@ -199,26 +154,29 @@ export function AboutPage({ settings }: { settings: AboutSettings }) {
             whileInView="visible"
             viewport={{ once: true, margin: "-48px" }}
           >
-            {values.map((item) => (
-              <motion.article
-                key={item.title}
-                variants={fadeUp}
-                whileHover={{ y: -4 }}
-                transition={{ duration: 0.55, ease: luxuryEase }}
-                className="group border border-black/[0.08] bg-white/60 p-6 transition-all duration-700 ease-out sm:p-8 md:hover:border-black/[0.12] md:hover:bg-white md:hover:shadow-[0_20px_50px_-32px_rgba(0,0,0,0.18)]"
-              >
-                <item.icon
-                  className="mb-6 size-5 stroke-[1.25] text-neutral-700 transition-colors duration-500 ease-out group-hover:text-neutral-900"
-                  aria-hidden
-                />
-                <h3 className="font-heading text-xl tracking-tight text-neutral-900">
-                  {item.title}
-                </h3>
-                <p className="mt-4 text-sm leading-relaxed text-neutral-600">
-                  {item.description}
-                </p>
-              </motion.article>
-            ))}
+            {settings.about_values?.map((item) => {
+              const Icon = ICON_MAP[item.icon] || Sparkles
+              return (
+                <motion.article
+                  key={item.id}
+                  variants={fadeUp}
+                  whileHover={{ y: -4 }}
+                  transition={{ duration: 0.55, ease: luxuryEase }}
+                  className="group border border-black/[0.08] bg-white/60 p-6 transition-all duration-700 ease-out sm:p-8 md:hover:border-black/[0.12] md:hover:bg-white md:hover:shadow-[0_20px_50px_-32px_rgba(0,0,0,0.18)]"
+                >
+                  <Icon
+                    className="mb-6 size-5 stroke-[1.25] text-neutral-700 transition-colors duration-500 ease-out group-hover:text-neutral-900"
+                    aria-hidden
+                  />
+                  <h3 className="font-heading text-xl tracking-tight text-neutral-900">
+                    {item.title}
+                  </h3>
+                  <p className="mt-4 text-sm leading-relaxed text-neutral-600">
+                    {item.description}
+                  </p>
+                </motion.article>
+              )
+            })}
           </motion.div>
         </div>
       </section>
@@ -248,16 +206,28 @@ export function AboutPage({ settings }: { settings: AboutSettings }) {
             whileInView="visible"
             viewport={{ once: true, margin: "-40px" }}
           >
-            {lookbookImages.map((img, index) => (
-              <motion.div key={img.src} variants={fadeUp} className={img.className}>
-                <EditorialImage
-                  src={img.src}
-                  alt={img.alt}
-                  aspect={img.aspect}
-                  priority={index === 0}
-                />
-              </motion.div>
-            ))}
+            {settings.about_lookbook?.map((img, index) => {
+              // Assign masonry classes cyclically
+              const m = index % 3
+              let className = "md:col-span-5"
+              let aspect = "aspect-[5/4]"
+              
+              if (m === 0) {
+                className = "md:col-span-7 md:row-span-2"
+                aspect = "aspect-[4/5] min-h-[280px] md:aspect-auto md:min-h-[520px]"
+              }
+              
+              return (
+                <motion.div key={img.id} variants={fadeUp} className={className}>
+                  <EditorialImage
+                    src={img.url}
+                    alt={img.alt}
+                    aspect={aspect}
+                    priority={index === 0}
+                  />
+                </motion.div>
+              )
+            })}
           </motion.div>
         </div>
       </section>
@@ -281,13 +251,13 @@ export function AboutPage({ settings }: { settings: AboutSettings }) {
             whileInView="visible"
             viewport={{ once: true, margin: "-32px" }}
           >
-            {testimonials.map((item) => (
+            {settings.about_testimonials?.map((item) => (
               <motion.blockquote
-                key={item.name}
+                key={item.id}
                 variants={fadeUp}
                 className="border-l border-neutral-900/20 bg-white/40 px-6 py-5 text-left"
               >
-                <p className="text-sm leading-relaxed text-neutral-700 italic">
+                <p className="text-sm leading-relaxed text-neutral-700 italic whitespace-pre-wrap">
                   &ldquo;{item.quote}&rdquo;
                 </p>
                 <footer className="mt-4 text-[10px] tracking-[0.18em] uppercase text-neutral-500">

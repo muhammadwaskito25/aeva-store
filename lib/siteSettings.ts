@@ -49,6 +49,26 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
   ]
 }
 
+export type AboutValue = {
+  id: string
+  title: string
+  description: string
+  icon: string
+}
+
+export type AboutLookbook = {
+  id: string
+  url: string
+  alt: string
+}
+
+export type AboutTestimonial = {
+  id: string
+  quote: string
+  name: string
+  location: string
+}
+
 export type AboutSettings = {
   about_hero_image: string
   about_hero_title: string
@@ -56,10 +76,40 @@ export type AboutSettings = {
   about_story_image: string
   about_story_title: string
   about_story_text: string
+  about_values: AboutValue[]
+  about_lookbook: AboutLookbook[]
+  about_testimonials: AboutTestimonial[]
 }
 
 export async function getAboutSettings(): Promise<AboutSettings> {
   const settings = await getSiteSettings()
+
+  const safeParseJSON = <T>(str: string | undefined, fallback: T): T => {
+    if (!str) return fallback
+    try {
+      return JSON.parse(str) as T
+    } catch {
+      return fallback
+    }
+  }
+
+  // Fallbacks based on previous hardcoded values
+  const defaultValues: AboutValue[] = [
+    { id: "v1", title: "Timeless Design", description: "Silhouettes that transcend seasons — restrained, intentional, and made to feel relevant for years.", icon: "Sparkles" },
+    { id: "v2", title: "Soft Comfort", description: "Refined fabrics chosen for gentle drape and breathable wear, elevating everyday movement.", icon: "Feather" },
+    { id: "v3", title: "Everyday Elegance", description: "Quiet luxury for modern modestwear — polished enough for occasion, effortless for daily life.", icon: "Sun" },
+  ]
+
+  const defaultLookbook: AboutLookbook[] = [
+    { id: "lb1", url: "/hero.png", alt: "AÉVA editorial — neutral tones" },
+    { id: "lb2", url: "/about2.jpg", alt: "Silk drape detail" },
+    { id: "lb3", url: "/about3.jpg", alt: "Soft fold styling" },
+  ]
+
+  const defaultTestimonials: AboutTestimonial[] = [
+    { id: "t1", quote: "AÉVA scarves feel incredibly refined. The fabric is light, graceful, and elevates every outfit.", name: "Mina K.", location: "Seoul" },
+    { id: "t2", quote: "Minimal, elegant, and timeless. This is exactly the quiet luxury look I wanted.", name: "Aiko T.", location: "Tokyo" },
+  ]
   
   return {
     about_hero_image: settings.about_hero_image || "/about4.jpg",
@@ -68,5 +118,8 @@ export async function getAboutSettings(): Promise<AboutSettings> {
     about_story_image: settings.about_story_image || "/about.png",
     about_story_title: settings.about_story_title || "An effortless presence",
     about_story_text: settings.about_story_text || "AÉVA was born from a simple belief — that scarves should feel timeless, effortless, and made for every woman. We wanted to create pieces that are easy to wear, soft in presence, and naturally elegant without feeling excessive.\n\nThrough refined fabrics, neutral tones, and thoughtful simplicity, each scarf is designed to become a part of everyday moments — comfortable, versatile, and quietly beautiful.\n\nMade for every woman, every style, and every season.",
+    about_values: safeParseJSON<AboutValue[]>(settings.about_values, defaultValues),
+    about_lookbook: safeParseJSON<AboutLookbook[]>(settings.about_lookbook, defaultLookbook),
+    about_testimonials: safeParseJSON<AboutTestimonial[]>(settings.about_testimonials, defaultTestimonials),
   }
 }
