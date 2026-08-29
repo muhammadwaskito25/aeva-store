@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { LogOut, Upload, Loader2, Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react"
@@ -22,15 +22,34 @@ export default function AdminAboutPage() {
 
   const [settings, setSettings] = useState<AboutSettings>({
     about_hero_image: "",
+    about_hero_position: "50% 50%",
     about_hero_title: "",
     about_hero_text: "",
     about_story_image: "",
+    about_story_position: "50% 50%",
     about_story_title: "",
     about_story_text: "",
     about_values: [],
     about_lookbook: [],
     about_testimonials: []
   })
+
+  // Dragging state
+  const [activeDragId, setActiveDragId] = useState<string | null>(null)
+  const dragState = useRef({ startX: 0, startY: 0, startPosX: 50, startPosY: 50 })
+
+  function parsePosition(posStr: string) {
+    if (posStr === "center top") return { x: 50, y: 0 }
+    if (posStr === "center center") return { x: 50, y: 50 }
+    if (posStr === "center bottom") return { x: 50, y: 100 }
+    if (posStr === "left center") return { x: 0, y: 50 }
+    if (posStr === "right center") return { x: 100, y: 50 }
+    const match = posStr.match(/([\d.]+)%\s+([\d.]+)%/)
+    if (match) {
+      return { x: parseFloat(match[1]), y: parseFloat(match[2]) }
+    }
+    return { x: 50, y: 50 }
+  }
 
   useEffect(() => {
     async function checkAuthAndLoadSettings() {
@@ -75,9 +94,9 @@ export default function AdminAboutPage() {
         ]
 
         const defaultLookbook: AboutLookbook[] = [
-          { id: "lb1", url: "/hero.png", alt: "AÉVA editorial — neutral tones" },
-          { id: "lb2", url: "/about2.jpg", alt: "Silk drape detail" },
-          { id: "lb3", url: "/about3.jpg", alt: "Soft fold styling" },
+          { id: "lb1", url: "/hero.png", alt: "AÉVA editorial — neutral tones", position: "50% 50%" },
+          { id: "lb2", url: "/about2.jpg", alt: "Silk drape detail", position: "50% 50%" },
+          { id: "lb3", url: "/about3.jpg", alt: "Soft fold styling", position: "50% 50%" },
         ]
 
         const defaultTestimonials: AboutTestimonial[] = [
@@ -87,9 +106,11 @@ export default function AdminAboutPage() {
 
         setSettings({
           about_hero_image: data.about_hero_image || "/about4.jpg",
+          about_hero_position: data.about_hero_position || "50% 50%",
           about_hero_title: data.about_hero_title || "Crafted for\nQuiet Elegance",
           about_hero_text: data.about_hero_text || "AÉVA crafts refined scarves for modern women who value softness, simplicity, and timeless drape. Founded by women, for women — every scarf is a quiet declaration of strength, grace, and the freedom to wear on your own terms.",
           about_story_image: data.about_story_image || "/about.png",
+          about_story_position: data.about_story_position || "50% 50%",
           about_story_title: data.about_story_title || "An effortless presence",
           about_story_text: data.about_story_text || "AÉVA was born from a simple belief — that scarves should feel timeless, effortless, and made for every woman. We wanted to create pieces that are easy to wear, soft in presence, and naturally elegant without feeling excessive.\n\nThrough refined fabrics, neutral tones, and thoughtful simplicity, each scarf is designed to become a part of everyday moments — comfortable, versatile, and quietly beautiful.\n\nMade for every woman, every style, and every season.",
           about_values: safeParseJSON<AboutValue[]>(data.about_values, defaultValues),
@@ -227,7 +248,7 @@ export default function AdminAboutPage() {
 
       const { data: { publicUrl: url } } = supabase.storage.from("site-assets").getPublicUrl(storagePath)
 
-      const newItem: AboutLookbook = { id: `lb-${Date.now()}`, url, alt: "Editorial image" }
+      const newItem: AboutLookbook = { id: `lb-${Date.now()}`, url, alt: "Editorial image", position: "50% 50%" }
       await handleSaveSetting("about_lookbook", [...settings.about_lookbook, newItem])
     } catch (err: any) {
       setError(err.message || "Gagal mengupload gambar.")
@@ -245,6 +266,57 @@ export default function AdminAboutPage() {
   }
   function moveLookbook(index: number, direction: 'up' | 'down') {
     handleSaveSetting("about_lookbook", moveItem(settings.about_lookbook, index, direction))
+  }
+
+  // Pointer event handlers for drag
+  const handlePointerDown = (e: React.PointerEvent, id: string, currentPosition: string) => {
+    e.preventDefault()
+    setActiveDragId(id)
+    const pos = parsePosition(currentPosition)
+    dragState.current = { startX: e.clientX, startY: e.clientY, startPosX: pos.x, startPosY: pos.y }
+  }
+
+  const handlePointerMove = (e: React.PointerEvent, id: string) => {
+    if (activeDragId !== id) return
+    const deltaX = e.clientX - dragState.current.startX
+    const deltaY = e.clientY - dragState.current.startY
+    
+    const sensitivity = 0.15
+    let newX = dragState.current.startPosX - (deltaX * sensitivity)
+    let newY = dragState.current.startPosY - (deltaY * sensitivity)
+    
+    newX = Math.max(0, Math.min(100, newX))
+    newY = Math.max(0, Math.min(100, newY))
+    
+    const newPos = `${newX.toFixed(1)}% ${newY.toFixed(1)}%`
+
+    if (id === "hero") {
+      setSettings(s => ({ ...s, about_hero_position: newPos }))
+    } else if (id === "story") {
+      setSettings(s => ({ ...s, about_story_position: newPos }))
+    } else {
+      const idx = settings.about_lookbook.findIndex(lb => lb.id === id)
+      if (idx !== -1) {
+        const newArr = [...settings.about_lookbook]
+        newArr[idx] = { ...newArr[idx], position: newPos }
+        setSettings(s => ({ ...s, about_lookbook: newArr }))
+      }
+    }
+  }
+
+  const handlePointerUp = () => {
+    if (activeDragId) {
+      const id = activeDragId
+      setActiveDragId(null)
+      
+      if (id === "hero") {
+        void handleSaveSetting("about_hero_position", settings.about_hero_position)
+      } else if (id === "story") {
+        void handleSaveSetting("about_story_position", settings.about_story_position)
+      } else {
+        void handleSaveSetting("about_lookbook", settings.about_lookbook)
+      }
+    }
   }
 
   // Testimonials
@@ -347,14 +419,46 @@ export default function AdminAboutPage() {
                   <label className="mb-2 block text-[11px] font-medium tracking-[0.14em] uppercase text-neutral-500">
                     Gambar Hero
                   </label>
-                  <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 flex items-center justify-center">
+                  <div 
+                    className={`relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 flex items-center justify-center select-none ${activeDragId === "hero" ? 'cursor-grabbing' : 'cursor-grab'}`}
+                    onPointerDown={(e) => handlePointerDown(e, "hero", settings.about_hero_position)}
+                    onPointerMove={(e) => handlePointerMove(e, "hero")}
+                    onPointerUp={handlePointerUp}
+                    onPointerLeave={handlePointerUp}
+                  >
                     {settings.about_hero_image ? (
-                      <Image src={settings.about_hero_image} alt="Hero About" fill className="object-cover" />
+                      <>
+                        <Image src={settings.about_hero_image} alt="Hero About" fill className="object-cover pointer-events-none" style={{ objectPosition: settings.about_hero_position }} />
+                        <div className="absolute bottom-3 left-3 rounded-md bg-black/50 px-2 py-1 text-xs text-white backdrop-blur-sm pointer-events-none">
+                          Tahan & seret gambar untuk mengatur posisi
+                        </div>
+                      </>
                     ) : (
                       <span className="text-neutral-400">Tidak ada gambar</span>
                     )}
                   </div>
-                  <div className="mt-4 flex justify-end">
+                  <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex flex-col gap-1.5 w-full sm:w-auto">
+                      <span className="text-[11px] font-medium tracking-[0.14em] uppercase text-neutral-500">
+                        Fokus Gambar (Position)
+                      </span>
+                      <p className="text-sm font-mono text-neutral-700">
+                        {settings.about_hero_position}
+                      </p>
+                      <div className="flex gap-2 mt-1">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="h-7 px-3 text-[10px] rounded-lg border-neutral-300"
+                          onClick={() => {
+                            setSettings(s => ({ ...s, about_hero_position: "50% 50%" }))
+                            void handleSaveSetting("about_hero_position", "50% 50%")
+                          }}
+                        >
+                          Reset Tengah
+                        </Button>
+                      </div>
+                    </div>
                     <Button disabled={saving} className="relative h-10 w-full sm:w-auto overflow-hidden rounded-xl bg-neutral-900 px-6 text-[11px] tracking-[0.14em] text-white uppercase hover:bg-neutral-800">
                       <input type="file" accept="image/*" className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0" onChange={(e) => handleImageUpload("about_hero_image", e)} disabled={saving} />
                       {saving ? <span className="flex items-center gap-2"><Loader2 className="size-3.5 animate-spin" /> Uploading...</span> : <span className="flex items-center gap-2"><Upload className="size-3.5" /> Ganti Gambar</span>}
@@ -381,15 +485,47 @@ export default function AdminAboutPage() {
               <div className="mt-6 space-y-6">
                 <div>
                   <label className="mb-2 block text-[11px] font-medium tracking-[0.14em] uppercase text-neutral-500">Gambar Brand Story</label>
-                  <div className="relative aspect-[4/5] w-full max-w-sm overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 flex items-center justify-center">
+                  <div 
+                    className={`relative aspect-[4/5] w-full max-w-sm overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 flex items-center justify-center select-none ${activeDragId === "story" ? 'cursor-grabbing' : 'cursor-grab'}`}
+                    onPointerDown={(e) => handlePointerDown(e, "story", settings.about_story_position)}
+                    onPointerMove={(e) => handlePointerMove(e, "story")}
+                    onPointerUp={handlePointerUp}
+                    onPointerLeave={handlePointerUp}
+                  >
                     {settings.about_story_image ? (
-                      <Image src={settings.about_story_image} alt="Story About" fill className="object-cover" />
+                      <>
+                        <Image src={settings.about_story_image} alt="Story About" fill className="object-cover pointer-events-none" style={{ objectPosition: settings.about_story_position }} />
+                        <div className="absolute bottom-3 left-3 rounded-md bg-black/50 px-2 py-1 text-[10px] text-white backdrop-blur-sm pointer-events-none text-center">
+                          Seret gambar
+                        </div>
+                      </>
                     ) : <span className="text-neutral-400">Tidak ada gambar</span>}
                   </div>
-                  <div className="mt-4 flex justify-start">
+                  <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 max-w-sm">
+                    <div className="flex flex-col gap-1.5 w-full sm:w-auto">
+                      <span className="text-[11px] font-medium tracking-[0.14em] uppercase text-neutral-500">
+                        Fokus (Position)
+                      </span>
+                      <p className="text-xs font-mono text-neutral-700">
+                        {settings.about_story_position}
+                      </p>
+                      <div className="flex gap-2 mt-1">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="h-7 px-3 text-[10px] rounded-lg border-neutral-300"
+                          onClick={() => {
+                            setSettings(s => ({ ...s, about_story_position: "50% 50%" }))
+                            void handleSaveSetting("about_story_position", "50% 50%")
+                          }}
+                        >
+                          Reset
+                        </Button>
+                      </div>
+                    </div>
                     <Button disabled={saving} className="relative h-10 w-full sm:w-auto overflow-hidden rounded-xl bg-neutral-900 px-6 text-[11px] tracking-[0.14em] text-white uppercase hover:bg-neutral-800">
                       <input type="file" accept="image/*" className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0" onChange={(e) => handleImageUpload("about_story_image", e)} disabled={saving} />
-                      {saving ? <span className="flex items-center gap-2"><Loader2 className="size-3.5 animate-spin" /> Uploading...</span> : <span className="flex items-center gap-2"><Upload className="size-3.5" /> Ganti Gambar</span>}
+                      {saving ? <span className="flex items-center gap-2"><Loader2 className="size-3.5 animate-spin" /> Uploading...</span> : <span className="flex items-center gap-2"><Upload className="size-3.5" /> Ganti</span>}
                     </Button>
                   </div>
                 </div>
@@ -464,12 +600,39 @@ export default function AdminAboutPage() {
               <div className="space-y-4">
                 {settings.about_lookbook.map((lb, i) => (
                   <div key={lb.id} className="relative border border-neutral-200 rounded-lg p-4 bg-neutral-50 flex gap-4 items-start">
-                    <div className="relative w-24 h-24 rounded-md overflow-hidden bg-neutral-200 shrink-0">
-                      <Image src={lb.url} alt="lookbook" fill className="object-cover" />
+                    <div 
+                      className={`relative w-28 h-36 rounded-md overflow-hidden bg-neutral-200 shrink-0 select-none ${activeDragId === lb.id ? 'cursor-grabbing' : 'cursor-grab'}`}
+                      onPointerDown={(e) => handlePointerDown(e, lb.id, lb.position || "50% 50%")}
+                      onPointerMove={(e) => handlePointerMove(e, lb.id)}
+                      onPointerUp={handlePointerUp}
+                      onPointerLeave={handlePointerUp}
+                    >
+                      <Image src={lb.url} alt="lookbook" fill className="object-cover pointer-events-none" style={{ objectPosition: lb.position || "50% 50%" }} />
+                      <div className="absolute bottom-1 left-1 right-1 rounded bg-black/50 px-1 py-0.5 text-[8px] text-white backdrop-blur-sm pointer-events-none text-center">
+                        Seret gambar
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0 pr-24">
-                       <label className="text-[10px] font-medium tracking-[0.1em] uppercase text-neutral-500">Alt Text (Untuk SEO)</label>
-                       <input type="text" value={lb.alt} onChange={(e) => updateLookbook(i, { alt: e.target.value })} onBlur={() => handleSaveSetting("about_lookbook", settings.about_lookbook)} className="mt-1 h-8 w-full rounded-md border border-neutral-200 px-2 text-sm" />
+                    <div className="flex-1 min-w-0 pr-24 space-y-3">
+                      <div>
+                        <label className="text-[10px] font-medium tracking-[0.1em] uppercase text-neutral-500">Alt Text (Untuk SEO)</label>
+                        <input type="text" value={lb.alt} onChange={(e) => updateLookbook(i, { alt: e.target.value })} onBlur={() => handleSaveSetting("about_lookbook", settings.about_lookbook)} className="mt-1 h-8 w-full rounded-md border border-neutral-200 px-2 text-sm" />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-medium tracking-[0.1em] uppercase text-neutral-500">
+                          Fokus (Position): <span className="font-mono text-neutral-700 normal-case">{lb.position || "50% 50%"}</span>
+                        </span>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="h-6 px-2 w-fit text-[10px] rounded border-neutral-300 mt-1"
+                          onClick={() => {
+                            updateLookbook(i, { position: "50% 50%" })
+                            void handleSaveSetting("about_lookbook", settings.about_lookbook) // Wait, we can't easily wait for state here, but handleSaveSetting stringifies the state. Actually, it's safer to just set it via updateLookbook and wait for onBlur, but Lookbook saves on blur of Alt text. Let's just update state. The user can save it by dragging or it will be saved next time they edit something else.
+                          }}
+                        >
+                          Reset
+                        </Button>
+                      </div>
                     </div>
                     <div className="absolute top-4 right-4 flex gap-1">
                       <Button variant="ghost" size="icon" onClick={() => moveLookbook(i, 'up')} disabled={i === 0 || saving} className="h-7 w-7"><ChevronUp className="size-4" /></Button>

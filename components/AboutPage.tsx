@@ -31,12 +31,14 @@ function EditorialImage({
   className,
   aspect,
   priority = false,
+  position = "50% 50%",
 }: {
   src: string
   alt: string
   className?: string
   aspect: string
   priority?: boolean
+  position?: string
 }) {
   const reduceMotion = useReducedMotion()
 
@@ -56,6 +58,7 @@ function EditorialImage({
         fill
         priority={priority}
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        style={{ objectPosition: position }}
         className={cn(
           "object-cover transition-all duration-700 ease-out",
           !reduceMotion && "group-hover:scale-[1.03] group-hover:opacity-95"
@@ -78,7 +81,8 @@ export function AboutPage({ settings }: { settings: AboutSettings }) {
           alt="AÉVA — quiet elegance editorial"
           fill
           priority
-          className="object-cover object-[50%_45%] sm:object-[50%_40%]"
+          style={{ objectPosition: settings.about_hero_position || "50% 50%" }}
+          className="object-cover"
           sizes="100vw"
         />
         <div
@@ -108,10 +112,11 @@ export function AboutPage({ settings }: { settings: AboutSettings }) {
             <div className="relative aspect-[4/5] overflow-hidden bg-[#ebe6dc]">
               <Image
                 src={settings.about_story_image}
-                alt="AÉVA scarf — refined neutral palette"
+                alt="AÉVA creative director portrait"
                 fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover transition-all duration-700 ease-out hover:scale-[1.02]"
+                sizes="(max-width: 768px) 100vw, 500px"
+                style={{ objectPosition: settings.about_story_position || "50% 50%" }}
+                className="object-cover transition-transform duration-[2s] ease-out hover:scale-105"
               />
             </div>
             <p className="mt-4 text-[10px] tracking-[0.2em] uppercase text-neutral-500">
@@ -224,6 +229,7 @@ export function AboutPage({ settings }: { settings: AboutSettings }) {
                     alt={img.alt}
                     aspect={aspect}
                     priority={index === 0}
+                    position={img.position}
                   />
                 </motion.div>
               )
