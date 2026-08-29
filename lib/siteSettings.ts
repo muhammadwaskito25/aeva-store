@@ -19,10 +19,32 @@ export async function getSiteSettings(): Promise<Record<string, string>> {
   return settings
 }
 
-export async function getHeroSettings(): Promise<{ url: string; position: string }> {
+export type HeroSlide = {
+  id: string
+  url: string
+  position: string
+}
+
+export async function getHeroSlides(): Promise<HeroSlide[]> {
   const settings = await getSiteSettings()
-  return {
-    url: settings.hero_image_url || "/hero.png",
-    position: settings.hero_image_position || "center center",
+  
+  if (settings.hero_slides) {
+    try {
+      const parsed = JSON.parse(settings.hero_slides) as HeroSlide[]
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed
+      }
+    } catch (e) {
+      console.error("[settings] Error parsing hero_slides:", e)
+    }
   }
+
+  // Fallback to legacy single image if slides don't exist yet
+  return [
+    {
+      id: "default-slide",
+      url: settings.hero_image_url || "/hero.png",
+      position: settings.hero_image_position || "center center",
+    }
+  ]
 }

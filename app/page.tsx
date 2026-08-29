@@ -1,17 +1,17 @@
 import { HomePage } from "@/components/HomePage"
 import { fetchFeaturedProducts } from "@/lib/products.repository"
-import { getHeroSettings } from "@/lib/siteSettings"
+import { getHeroSlides } from "@/lib/siteSettings"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
 
 export default async function Page() {
-  const [products, heroSettings] = await Promise.all([
+  const [products, heroSlides] = await Promise.all([
     fetchFeaturedProducts(),
-    getHeroSettings(),
+    getHeroSlides(),
   ])
 
   console.log("[homepage] products loaded:", products.length)
 
-  return <HomePage featuredProducts={products} heroImageUrl={heroSettings.url} heroImagePosition={heroSettings.position} />
+  return <HomePage featuredProducts={products} heroSlides={heroSlides} />
 }

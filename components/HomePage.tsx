@@ -1,5 +1,7 @@
 "use client"
 
+import { useState, useEffect } from "react"
+
 import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
@@ -19,18 +21,35 @@ import {
 } from "@/lib/products"
 import { useCart } from "@/lib/cart"
 
+import type { HeroSlide } from "@/lib/siteSettings"
+
 type HomePageProps = {
   featuredProducts: Product[]
-  heroImageUrl: string
-  heroImagePosition: string
+  heroSlides: HeroSlide[]
 }
 
-export function HomePage({ featuredProducts, heroImageUrl, heroImagePosition }: HomePageProps) {
+export function HomePage({ featuredProducts, heroSlides }: HomePageProps) {
   const { addToCart, openCart } = useCart()
 
   const handleAddToCart = (product: Product) => {
     addToCart(product)
     openCart()
+  }
+
+  const [currentSlide, setCurrentSlide] = useState(0)
+
+  useEffect(() => {
+    if (!heroSlides || heroSlides.length <= 1) return
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length)
+    }, 5000)
+    return () => clearInterval(timer)
+  }, [heroSlides])
+
+  const currentHero = heroSlides?.[currentSlide] || {
+    id: "default",
+    url: "/hero.png",
+    position: "center center",
   }
 
   return (
@@ -41,19 +60,28 @@ export function HomePage({ featuredProducts, heroImageUrl, heroImagePosition }: 
         id="home"
         className="relative w-full aspect-[16/9] max-h-[70vh] min-h-[500px] overflow-hidden bg-[#ebe6dc] flex items-center justify-center text-center"
       >
-        {/* Background Image */}
+        {/* Background Images */}
         <div className="absolute inset-0 z-0">
-          <Image
-            src={heroImageUrl}
-            alt="Model posing with AEVA scarf draping gracefully"
-            fill
-            priority
-            sizes="100vw"
-            style={{ objectPosition: heroImagePosition }}
-            className="object-cover transition-transform duration-[1200ms] ease-out hover:scale-[1.015]"
-          />
+          {heroSlides?.map((slide, index) => (
+            <div
+              key={slide.id}
+              className={`absolute inset-0 transition-opacity duration-1000 ${
+                index === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
+              }`}
+            >
+              <Image
+                src={slide.url}
+                alt="Model posing with AEVA scarf draping gracefully"
+                fill
+                priority={index === 0}
+                sizes="100vw"
+                style={{ objectPosition: slide.position }}
+                className="object-cover transition-transform duration-[5000ms] ease-out scale-100"
+              />
+            </div>
+          ))}
           {/* Overlay to ensure text readability */}
-          <div className="absolute inset-0 bg-black/20" />
+          <div className="absolute inset-0 bg-black/20 z-20" />
         </div>
 
         {/* Text Content Overlay */}
@@ -73,22 +101,38 @@ export function HomePage({ featuredProducts, heroImageUrl, heroImagePosition }: 
             </p>
           </div>
 
-          <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-center">
+          <motion.div variants={fadeUp}>
             <Button
               asChild
-              className="h-12 bg-white px-8 text-[11px] tracking-[0.16em] text-black uppercase hover:bg-white/90"
+              className="mt-4 h-12 rounded-none bg-white px-8 text-xs font-semibold tracking-[0.16em] text-neutral-900 transition-colors hover:bg-neutral-100 uppercase"
             >
-              <Link href="#collection">Shop the Collection</Link>
+              <Link href="/products">Shop The Collection</Link>
             </Button>
             <Button
               asChild
               variant="outline"
-              className="h-12 border-white/50 bg-black/20 backdrop-blur-sm px-8 text-[11px] tracking-[0.16em] text-white uppercase hover:bg-black/40 hover:border-white"
+              className="mt-4 ml-4 h-12 rounded-none border-white/40 bg-transparent px-8 text-xs font-semibold tracking-[0.16em] text-white transition-colors hover:bg-white/10 uppercase"
             >
               <Link href="/about">Our Story</Link>
             </Button>
-          </div>
+          </motion.div>
         </FadeIn>
+
+        {/* Slide Indicators */}
+        {heroSlides && heroSlides.length > 1 && (
+          <div className="absolute bottom-6 left-1/2 z-30 flex -translate-x-1/2 gap-2">
+            {heroSlides.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`h-1.5 rounded-full transition-all ${
+                  index === currentSlide ? "w-8 bg-white" : "w-2 bg-white/50 hover:bg-white/80"
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       <section

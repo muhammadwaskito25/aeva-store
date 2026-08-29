@@ -3,26 +3,25 @@
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { LogOut, Upload, Loader2 } from "lucide-react"
+import { LogOut, Upload, Loader2, Plus, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
+import type { HeroSlide } from "@/lib/siteSettings"
 
 export default function AdminSettingsPage() {
   const router = useRouter()
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [authError, setAuthError] = useState(false)
-  const [heroImageUrl, setHeroImageUrl] = useState<string>("")
-  const [heroImagePosition, setHeroImagePosition] = useState<string>("center center")
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const [slides, setSlides] = useState<HeroSlide[]>([])
+  
   // Dragging state
-  const [dragPos, setDragPos] = useState({ x: 50, y: 50 })
-  const [isDragging, setIsDragging] = useState(false)
+  const [activeDragId, setActiveDragId] = useState<string | null>(null)
   const dragState = useRef({ startX: 0, startY: 0, startPosX: 50, startPosY: 50 })
 
   function parsePosition(posStr: string) {
@@ -68,10 +67,24 @@ export default function AdminSettingsPage() {
       const res = await fetch("/api/admin/settings")
       if (res.ok) {
         const data = await res.json()
-        setHeroImageUrl(data.hero_image_url || "")
-        const pos = data.hero_image_position || "50% 50%"
-        setHeroImagePosition(pos)
-        setDragPos(parsePosition(pos))
+        if (data.hero_slides) {
+          try {
+            const parsed = JSON.parse(data.hero_slides) as HeroSlide[]
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setSlides(parsed)
+              return
+            }
+          } catch (e) {
+            console.error(e)
+          }
+        }
+        
+        // Fallback
+        setSlides([{
+          id: "default-slide",
+          url: data.hero_image_url || "/hero.png",
+          position: data.hero_image_position || "50% 50%"
+        }])
       }
     } catch (err) {
       console.error(err)
@@ -86,9 +99,33 @@ export default function AdminSettingsPage() {
     router.push("/admin/login")
   }
 
-  async function handleHeroUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function saveSlides(newSlides: HeroSlide[]) {
+    setSaving(true)
+    setError(null)
+    setMessage(null)
+
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "hero_slides", value: JSON.stringify(newSlides) })
+      })
+
+      if (!res.ok) throw new Error("Gagal menyimpan ke database.")
+
+      setSlides(newSlides)
+      setMessage("Pengaturan slider berhasil diperbarui.")
+    } catch (err: any) {
+      setError(err.message || "Gagal menyimpan slider.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleSlideUpload(slideId: string, e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    e.target.value = "" // Reset input
 
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
       setError("Hanya format JPEG, PNG, atau WebP yang didukung.")
@@ -113,60 +150,45 @@ export default function AdminSettingsPage() {
         data: { publicUrl: url },
       } = supabase.storage.from("site-assets").getPublicUrl(storagePath)
 
-      const res = await fetch("/api/admin/settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: "hero_image_url", value: url })
-      })
-
-      if (!res.ok) throw new Error("Gagal menyimpan ke database.")
-
-      setHeroImageUrl(url)
-      setMessage("Hero Image berhasil diperbarui.")
+      const newSlides = slides.map(s => s.id === slideId ? { ...s, url } : s)
+      await saveSlides(newSlides)
     } catch (err: any) {
-      setError(err.message || "Gagal mengupload hero image.")
-    } finally {
+      setError(err.message || "Gagal mengupload gambar.")
       setSaving(false)
-      if (fileInputRef.current) fileInputRef.current.value = ""
     }
   }
 
-  async function handlePositionChange(position: string) {
-    setHeroImagePosition(position)
-    setSaving(true)
-    setError(null)
-    setMessage(null)
-
-    try {
-      const res = await fetch("/api/admin/settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: "hero_image_position", value: position })
-      })
-
-      if (!res.ok) throw new Error("Gagal menyimpan ke database.")
-
-      setMessage("Posisi gambar berhasil diperbarui.")
-    } catch (err: any) {
-      setError(err.message || "Gagal menyimpan posisi gambar.")
-    } finally {
-      setSaving(false)
+  function handleAddSlide() {
+    const newSlide: HeroSlide = {
+      id: `slide-${Date.now()}`,
+      url: "/hero.png",
+      position: "50% 50%"
     }
+    saveSlides([...slides, newSlide])
+  }
+
+  function handleRemoveSlide(id: string) {
+    if (slides.length <= 1) {
+      setError("Harus ada minimal 1 slide.")
+      return
+    }
+    const newSlides = slides.filter(s => s.id !== id)
+    saveSlides(newSlides)
   }
 
   // Pointer event handlers for drag
-  const handlePointerDown = (e: React.PointerEvent) => {
+  const handlePointerDown = (e: React.PointerEvent, slide: HeroSlide) => {
     e.preventDefault()
-    setIsDragging(true)
-    dragState.current = { startX: e.clientX, startY: e.clientY, startPosX: dragPos.x, startPosY: dragPos.y }
+    setActiveDragId(slide.id)
+    const pos = parsePosition(slide.position)
+    dragState.current = { startX: e.clientX, startY: e.clientY, startPosX: pos.x, startPosY: pos.y }
   }
 
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDragging) return
+  const handlePointerMove = (e: React.PointerEvent, slideId: string) => {
+    if (activeDragId !== slideId) return
     const deltaX = e.clientX - dragState.current.startX
     const deltaY = e.clientY - dragState.current.startY
     
-    // Sensitivity factor (adjust if dragging feels too fast/slow)
     const sensitivity = 0.15
     let newX = dragState.current.startPosX - (deltaX * sensitivity)
     let newY = dragState.current.startPosY - (deltaY * sensitivity)
@@ -174,14 +196,17 @@ export default function AdminSettingsPage() {
     newX = Math.max(0, Math.min(100, newX))
     newY = Math.max(0, Math.min(100, newY))
     
-    setDragPos({ x: newX, y: newY })
-    setHeroImagePosition(`${newX.toFixed(1)}% ${newY.toFixed(1)}%`)
+    const newPos = `${newX.toFixed(1)}% ${newY.toFixed(1)}%`
+    setSlides(slides.map(s => s.id === slideId ? { ...s, position: newPos } : s))
   }
 
   const handlePointerUp = () => {
-    if (isDragging) {
-      setIsDragging(false)
-      void handlePositionChange(`${dragPos.x.toFixed(1)}% ${dragPos.y.toFixed(1)}%`)
+    if (activeDragId) {
+      const activeSlide = slides.find(s => s.id === activeDragId)
+      setActiveDragId(null)
+      if (activeSlide) {
+        void saveSlides(slides)
+      }
     }
   }
 
@@ -240,10 +265,21 @@ export default function AdminSettingsPage() {
 
       <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
         <section className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold tracking-tight">Homepage Hero Image</h2>
-          <p className="mt-1 text-sm text-neutral-500 mb-6">
-            Ganti gambar banner utama di halaman beranda. Rasio yang disarankan adalah 16:9 (Landscape).
-          </p>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">Homepage Hero Slider</h2>
+              <p className="mt-1 text-sm text-neutral-500">
+                Ganti gambar banner utama di beranda. Mendukung beberapa slide yang berganti otomatis.
+              </p>
+            </div>
+            <Button
+              onClick={handleAddSlide}
+              disabled={saving || loading}
+              className="h-9 rounded-lg bg-neutral-900 px-4 text-xs text-white hover:bg-neutral-800"
+            >
+              <Plus className="mr-1.5 size-3.5" /> Tambah Slide
+            </Button>
+          </div>
 
           {error && (
             <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
@@ -257,84 +293,94 @@ export default function AdminSettingsPage() {
             </div>
           )}
 
-          <div className="space-y-4">
-            <div 
-              className={`relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 flex items-center justify-center select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-              onPointerDown={handlePointerDown}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerLeave={handlePointerUp}
-            >
-              {loading ? (
+          <div className="space-y-8">
+            {loading ? (
+              <div className="flex justify-center py-12">
                 <Loader2 className="size-6 animate-spin text-neutral-400" />
-              ) : heroImageUrl ? (
-                <>
+              </div>
+            ) : slides.map((slide, index) => (
+              <div key={slide.id} className="space-y-4 pb-8 border-b border-neutral-100 last:border-0 last:pb-0">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium">Slide {index + 1}</h3>
+                  {slides.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveSlide(slide.id)}
+                      disabled={saving}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 px-2"
+                    >
+                      <Trash2 className="size-3.5 mr-1" /> Hapus
+                    </Button>
+                  )}
+                </div>
+
+                <div 
+                  className={`relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 flex items-center justify-center select-none ${activeDragId === slide.id ? 'cursor-grabbing' : 'cursor-grab'}`}
+                  onPointerDown={(e) => handlePointerDown(e, slide)}
+                  onPointerMove={(e) => handlePointerMove(e, slide.id)}
+                  onPointerUp={handlePointerUp}
+                  onPointerLeave={handlePointerUp}
+                >
                   <Image
-                    src={heroImageUrl}
-                    alt="Hero Image"
+                    src={slide.url}
+                    alt={`Hero Slide ${index + 1}`}
                     fill
-                    style={{ objectPosition: heroImagePosition }}
+                    style={{ objectPosition: slide.position }}
                     className="object-cover pointer-events-none"
                   />
                   <div className="absolute bottom-3 left-3 rounded-md bg-black/50 px-2 py-1 text-xs text-white backdrop-blur-sm pointer-events-none">
                     Tahan & seret gambar untuk mengatur posisi
                   </div>
-                </>
-              ) : (
-                <div className="flex flex-col items-center justify-center text-neutral-400">
-                  <Image width={64} height={64} src="/hero.png" alt="Default Hero" className="opacity-50 pointer-events-none" />
-                  <p className="mt-2 text-sm">Default (/public/hero.png)</p>
                 </div>
-              )}
-            </div>
 
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex flex-col gap-1.5 w-full sm:w-auto">
-                <span className="text-[11px] font-medium tracking-[0.14em] uppercase text-neutral-500">
-                  Fokus Gambar (Position)
-                </span>
-                <p className="text-sm font-mono text-neutral-700">
-                  {heroImagePosition}
-                </p>
-                <div className="flex gap-2 mt-1">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="h-7 px-3 text-[10px] rounded-lg border-neutral-300"
-                    onClick={() => { 
-                      setDragPos({x:50,y:50}); 
-                      setHeroImagePosition("50% 50%"); 
-                      void handlePositionChange("50% 50%") 
-                    }}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex flex-col gap-1.5 w-full sm:w-auto">
+                    <span className="text-[11px] font-medium tracking-[0.14em] uppercase text-neutral-500">
+                      Fokus Gambar (Position)
+                    </span>
+                    <p className="text-sm font-mono text-neutral-700">
+                      {slide.position}
+                    </p>
+                    <div className="flex gap-2 mt-1">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        className="h-7 px-3 text-[10px] rounded-lg border-neutral-300"
+                        onClick={() => {
+                          const newSlides = slides.map(s => s.id === slide.id ? { ...s, position: "50% 50%" } : s)
+                          saveSlides(newSlides)
+                        }}
+                      >
+                        Reset Tengah
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Button
+                    disabled={saving}
+                    className="relative h-10 w-full sm:w-auto overflow-hidden rounded-xl bg-neutral-900 px-6 text-[11px] tracking-[0.14em] text-white uppercase hover:bg-neutral-800"
                   >
-                    Reset Tengah
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                      className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+                      onChange={(e) => handleSlideUpload(slide.id, e)}
+                      disabled={saving}
+                    />
+                    {saving ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="size-3.5 animate-spin" /> Uploading...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <Upload className="size-3.5" /> Upload Image
+                      </span>
+                    )}
                   </Button>
                 </div>
               </div>
-
-              <Button
-                disabled={saving || loading}
-                className="relative h-10 w-full sm:w-auto overflow-hidden rounded-xl bg-neutral-900 px-6 text-[11px] tracking-[0.14em] text-white uppercase hover:bg-neutral-800"
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-                  className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
-                  onChange={handleHeroUpload}
-                  disabled={saving || loading}
-                />
-                {saving ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="size-3.5 animate-spin" /> Uploading...
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    <Upload className="size-3.5" /> Upload Image
-                  </span>
-                )}
-              </Button>
-            </div>
+            ))}
           </div>
         </section>
       </div>
