@@ -79,49 +79,75 @@ export function AboutPage({ settings }: { settings: AboutSettings }) {
         const ratio = settings.about_hero_ratio || 'min-h-[78vh]'
         const isFullBleed = ratio === 'min-h-[78vh]' || ratio === 'aspect-video' || ratio === 'aspect-auto'
         
-        return (
-          <div className={isFullBleed ? "" : "px-4 sm:px-8 py-4 sm:py-8 lg:px-10"}>
-            <section 
-              className={cn(
-                "relative overflow-hidden",
-                ratio === 'min-h-[78vh]' ? 'min-h-[78vh] sm:min-h-[82vh] lg:min-h-[88vh]' : ratio,
-                isFullBleed ? "w-full" : "mx-auto w-full max-w-4xl rounded-2xl shadow-sm"
-              )}
-            >
-        <Image
-          src={settings.about_hero_image}
-          alt="AÉVA — quiet elegance editorial"
-          fill
-          priority
-          style={{ objectPosition: settings.about_hero_position || "50% 50%" }}
-          className="object-cover"
-          sizes="100vw"
-        />
-        <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"
-          aria-hidden
-        />
+        if (isFullBleed) {
+          return (
+            <section className={cn("relative overflow-hidden w-full", ratio === 'min-h-[78vh]' ? 'min-h-[78vh] sm:min-h-[82vh] lg:min-h-[88vh]' : ratio)}>
+              <Image
+                src={settings.about_hero_image}
+                alt="AÉVA — quiet elegance editorial"
+                fill
+                priority
+                style={{ objectPosition: settings.about_hero_position || "50% 50%" }}
+                className="object-cover"
+                sizes="100vw"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" aria-hidden />
 
-            <div className={cn(
-              "relative mx-auto flex w-full flex-col justify-end",
-              ratio === 'min-h-[78vh]' 
-                ? "max-w-6xl px-5 pb-14 pt-28 sm:px-8 sm:pb-20 sm:pt-32 lg:pb-24 lg:px-10 min-h-[78vh] sm:min-h-[82vh] lg:min-h-[88vh]" 
-                : "h-full min-h-[50vh] px-5 pb-10 pt-20 sm:px-10 sm:pb-12"
-            )}>
-              <FadeIn inView={false} className="max-w-3xl space-y-4 sm:space-y-5">
-            <p className="text-[11px] font-medium tracking-[0.3em] text-white/75 uppercase">
-              Brand Story
-            </p>
-            <h1 className="font-heading text-[2.25rem] leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-7xl lg:leading-[1.05] whitespace-pre-wrap">
-              {settings.about_hero_title}
-            </h1>
-            <p className="max-w-lg text-[15px] leading-[1.75] text-white/90 sm:text-base sm:leading-relaxed whitespace-pre-wrap">
-              {settings.about_hero_text}
-            </p>
+              <div className={cn(
+                "relative mx-auto flex w-full flex-col justify-end max-w-6xl",
+                ratio === 'min-h-[78vh]' 
+                  ? "px-5 pb-14 pt-28 sm:px-8 sm:pb-20 sm:pt-32 lg:pb-24 lg:px-10 min-h-[78vh] sm:min-h-[82vh] lg:min-h-[88vh]" 
+                  : "h-full min-h-[50vh] px-5 pb-10 pt-20 sm:px-10 sm:pb-12"
+              )}>
+                <FadeIn inView={false} className="max-w-3xl space-y-4 sm:space-y-5">
+                  <p className="text-[11px] font-medium tracking-[0.3em] text-white/75 uppercase">
+                    Brand Story
+                  </p>
+                  <h1 className="font-heading text-[2.25rem] leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-7xl lg:leading-[1.05] whitespace-pre-wrap">
+                    {settings.about_hero_title}
+                  </h1>
+                  <p className="max-w-lg text-[15px] leading-[1.75] text-white/90 sm:text-base sm:leading-relaxed whitespace-pre-wrap">
+                    {settings.about_hero_text}
+                  </p>
+                </FadeIn>
+              </div>
+            </section>
+          )
+        }
+
+        // EDITORIAL SPLIT LAYOUT FOR PORTRAIT/SQUARE
+        return (
+          <section className="mx-auto w-full max-w-6xl px-5 pt-32 pb-14 sm:px-8 sm:pt-40 sm:pb-20 lg:px-10">
+            <div className="grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-8">
+              <FadeIn inView={false} className="order-2 lg:order-1 lg:col-span-5 xl:col-span-6 space-y-6 sm:space-y-8">
+                <div className="space-y-4">
+                  <p className="text-[11px] font-medium tracking-[0.25em] text-neutral-500 uppercase">
+                    Brand Story
+                  </p>
+                  <h1 className="font-heading text-4xl leading-[1.1] tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl whitespace-pre-wrap">
+                    {settings.about_hero_title}
+                  </h1>
+                </div>
+                <p className="max-w-md text-[15px] leading-[1.8] text-neutral-600 sm:text-base whitespace-pre-wrap">
+                  {settings.about_hero_text}
+                </p>
+              </FadeIn>
+
+              <FadeIn delay={0.1} className="order-1 lg:order-2 lg:col-span-7 xl:col-span-6">
+                <div className={cn("relative w-full overflow-hidden rounded-2xl bg-neutral-100", ratio)}>
+                  <Image
+                    src={settings.about_hero_image}
+                    alt="AÉVA — quiet elegance editorial"
+                    fill
+                    priority
+                    style={{ objectPosition: settings.about_hero_position || "50% 50%" }}
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                  />
+                </div>
               </FadeIn>
             </div>
           </section>
-        </div>
         )
       })()}
 
