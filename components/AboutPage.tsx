@@ -11,6 +11,7 @@ import { SiteFooter } from "@/components/SiteFooter"
 import { Button } from "@/components/ui/button"
 import { fadeUp, luxuryEase, staggerContainer } from "@/lib/motion"
 import { cn } from "@/lib/utils"
+import type { AboutSettings } from "@/lib/siteSettings"
 
 const values = [
   {
@@ -109,7 +110,7 @@ function EditorialImage({
   )
 }
 
-export function AboutPage() {
+export function AboutPage({ settings }: { settings: AboutSettings }) {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f8f5ef] text-neutral-900">
@@ -118,7 +119,7 @@ export function AboutPage() {
       {/* SECTION 1 — HERO */}
       <section className="relative min-h-[78vh] overflow-hidden sm:min-h-[82vh] lg:min-h-[88vh]">
         <Image
-          src="/about4.jpg"
+          src={settings.about_hero_image}
           alt="AÉVA — quiet elegance editorial"
           fill
           priority
@@ -135,16 +136,11 @@ export function AboutPage() {
             <p className="text-[11px] font-medium tracking-[0.3em] text-white/75 uppercase">
               Brand Story
             </p>
-            <h1 className="font-heading text-[2.25rem] leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-7xl lg:leading-[1.05]">
-              Crafted for
-              <br />
-              Quiet Elegance
+            <h1 className="font-heading text-[2.25rem] leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-7xl lg:leading-[1.05] whitespace-pre-wrap">
+              {settings.about_hero_title}
             </h1>
-            <p className="max-w-lg text-[15px] leading-[1.75] text-white/90 sm:text-base sm:leading-relaxed">
-              AÉVA crafts refined scarves for modern women who value softness,
-              simplicity, and timeless drape. Founded by women, for women —
-              every scarf is a quiet declaration of strength, grace, and the
-              freedom to wear on your own terms.
+            <p className="max-w-lg text-[15px] leading-[1.75] text-white/90 sm:text-base sm:leading-relaxed whitespace-pre-wrap">
+              {settings.about_hero_text}
             </p>
           </FadeIn>
         </div>
@@ -156,7 +152,7 @@ export function AboutPage() {
           <FadeIn className="relative order-2 lg:order-1">
             <div className="relative aspect-[4/5] overflow-hidden bg-[#ebe6dc]">
               <Image
-                src="/about.png"
+                src={settings.about_story_image}
                 alt="AÉVA scarf — refined neutral palette"
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -164,7 +160,7 @@ export function AboutPage() {
               />
             </div>
             <p className="mt-4 text-[10px] tracking-[0.2em] uppercase text-neutral-500">
-              The AÉVA Edit · SS26
+              The AÉVA Edit
             </p>
           </FadeIn>
 
@@ -174,22 +170,11 @@ export function AboutPage() {
                 Philosophy &amp; Craft
               </p>
               <h2 className="font-heading text-2xl tracking-tight sm:text-4xl">
-                An effortless presence
+                {settings.about_story_title}
               </h2>
             </div>
-            <div className="space-y-5 text-sm leading-[1.85] text-neutral-700 sm:text-base">
-              <p>
-                AÉVA was born from a simple belief — that scarves should feel
-                timeless, effortless, and made for every woman. We wanted to
-                create pieces that are easy to wear, soft in presence, and
-                naturally elegant without feeling excessive.
-              </p>
-              <p>
-                Through refined fabrics, neutral tones, and thoughtful
-                simplicity, each scarf is designed to become a part of everyday
-                moments — comfortable, versatile, and quietly beautiful.
-              </p>
-              <p>Made for every woman, every style, and every season.</p>
+            <div className="space-y-5 text-sm leading-[1.85] text-neutral-700 sm:text-base whitespace-pre-wrap">
+              {settings.about_story_text}
             </div>
           </FadeIn>
         </div>
