@@ -251,7 +251,7 @@ export function AboutPage({ settings }: { settings: AboutSettings }) {
           </FadeIn>
 
           <motion.div
-            className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3"
+            className="columns-1 gap-4 sm:columns-2 md:columns-3"
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
@@ -260,7 +260,7 @@ export function AboutPage({ settings }: { settings: AboutSettings }) {
             {settings.about_lookbook?.map((img, index) => {
               const aspect = img.ratio || "aspect-square"
               return (
-                <motion.div key={img.id} variants={fadeUp} className="w-full">
+                <motion.div key={img.id} variants={fadeUp} className="break-inside-avoid mb-4 w-full">
                   <EditorialImage
                     src={img.url}
                     alt={img.alt}
