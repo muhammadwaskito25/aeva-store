@@ -273,6 +273,7 @@ export default function AdminAboutPage() {
     const newArr = [...settings.about_lookbook]
     newArr[index] = { ...newArr[index], ...updates }
     setSettings({ ...settings, about_lookbook: newArr })
+    return newArr
   }
   function removeLookbook(index: number) {
     const newArr = settings.about_lookbook.filter((_, i) => i !== index)
@@ -673,8 +674,8 @@ export default function AdminAboutPage() {
                           <select 
                             value={lb.ratio || "aspect-auto"} 
                             onChange={(e) => {
-                              updateLookbook(i, { ratio: e.target.value })
-                              void handleSaveSetting("about_lookbook", settings.about_lookbook)
+                              const newArr = updateLookbook(i, { ratio: e.target.value })
+                              void handleSaveSetting("about_lookbook", newArr)
                             }}
                             className="mt-1 h-8 w-full rounded-md border border-neutral-200 px-2 text-sm outline-none bg-white"
                           >
@@ -692,8 +693,8 @@ export default function AdminAboutPage() {
                             variant="outline" 
                             className="h-8 px-2 w-fit text-[10px] rounded border-neutral-300 mt-1"
                             onClick={() => {
-                              updateLookbook(i, { position: "50% 50%" })
-                              void handleSaveSetting("about_lookbook", settings.about_lookbook)
+                              const newArr = updateLookbook(i, { position: "50% 50%" })
+                              void handleSaveSetting("about_lookbook", newArr)
                             }}
                           >
                             Reset Tengah
