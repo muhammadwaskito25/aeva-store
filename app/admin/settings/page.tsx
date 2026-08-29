@@ -20,6 +20,24 @@ export default function AdminSettingsPage() {
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Dragging state
+  const [dragPos, setDragPos] = useState({ x: 50, y: 50 })
+  const [isDragging, setIsDragging] = useState(false)
+  const dragState = useRef({ startX: 0, startY: 0, startPosX: 50, startPosY: 50 })
+
+  function parsePosition(posStr: string) {
+    if (posStr === "center top") return { x: 50, y: 0 }
+    if (posStr === "center center") return { x: 50, y: 50 }
+    if (posStr === "center bottom") return { x: 50, y: 100 }
+    if (posStr === "left center") return { x: 0, y: 50 }
+    if (posStr === "right center") return { x: 100, y: 50 }
+    const match = posStr.match(/([\d.]+)%\s+([\d.]+)%/)
+    if (match) {
+      return { x: parseFloat(match[1]), y: parseFloat(match[2]) }
+    }
+    return { x: 50, y: 50 }
+  }
+
   useEffect(() => {
     async function checkAuthAndLoadSettings() {
       const supabase = createSupabaseBrowserClient()
@@ -51,7 +69,9 @@ export default function AdminSettingsPage() {
       if (res.ok) {
         const data = await res.json()
         setHeroImageUrl(data.hero_image_url || "")
-        setHeroImagePosition(data.hero_image_position || "center center")
+        const pos = data.hero_image_position || "50% 50%"
+        setHeroImagePosition(pos)
+        setDragPos(parsePosition(pos))
       }
     } catch (err) {
       console.error(err)
@@ -134,6 +154,37 @@ export default function AdminSettingsPage() {
     }
   }
 
+  // Pointer event handlers for drag
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+    dragState.current = { startX: e.clientX, startY: e.clientY, startPosX: dragPos.x, startPosY: dragPos.y }
+  }
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return
+    const deltaX = e.clientX - dragState.current.startX
+    const deltaY = e.clientY - dragState.current.startY
+    
+    // Sensitivity factor (adjust if dragging feels too fast/slow)
+    const sensitivity = 0.15
+    let newX = dragState.current.startPosX - (deltaX * sensitivity)
+    let newY = dragState.current.startPosY - (deltaY * sensitivity)
+    
+    newX = Math.max(0, Math.min(100, newX))
+    newY = Math.max(0, Math.min(100, newY))
+    
+    setDragPos({ x: newX, y: newY })
+    setHeroImagePosition(`${newX.toFixed(1)}% ${newY.toFixed(1)}%`)
+  }
+
+  const handlePointerUp = () => {
+    if (isDragging) {
+      setIsDragging(false)
+      void handlePositionChange(`${dragPos.x.toFixed(1)}% ${dragPos.y.toFixed(1)}%`)
+    }
+  }
+
   if (authError) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-neutral-50 text-sm text-neutral-500">
@@ -207,44 +258,59 @@ export default function AdminSettingsPage() {
           )}
 
           <div className="space-y-4">
-            <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 flex items-center justify-center">
+            <div 
+              className={`relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 flex items-center justify-center select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerLeave={handlePointerUp}
+            >
               {loading ? (
                 <Loader2 className="size-6 animate-spin text-neutral-400" />
               ) : heroImageUrl ? (
-                <Image
-                  src={heroImageUrl}
-                  alt="Hero Image"
-                  fill
-                  style={{ objectPosition: heroImagePosition }}
-                  className="object-cover"
-                />
+                <>
+                  <Image
+                    src={heroImageUrl}
+                    alt="Hero Image"
+                    fill
+                    style={{ objectPosition: heroImagePosition }}
+                    className="object-cover pointer-events-none"
+                  />
+                  <div className="absolute bottom-3 left-3 rounded-md bg-black/50 px-2 py-1 text-xs text-white backdrop-blur-sm pointer-events-none">
+                    Tahan & seret gambar untuk mengatur posisi
+                  </div>
+                </>
               ) : (
                 <div className="flex flex-col items-center justify-center text-neutral-400">
-                  <Image width={64} height={64} src="/hero.png" alt="Default Hero" className="opacity-50" />
+                  <Image width={64} height={64} src="/hero.png" alt="Default Hero" className="opacity-50 pointer-events-none" />
                   <p className="mt-2 text-sm">Default (/public/hero.png)</p>
                 </div>
               )}
             </div>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <label className="flex flex-col gap-1.5 w-full sm:w-auto">
+              <div className="flex flex-col gap-1.5 w-full sm:w-auto">
                 <span className="text-[11px] font-medium tracking-[0.14em] uppercase text-neutral-500">
                   Fokus Gambar (Position)
                 </span>
-                <select
-                  disabled={saving || loading}
-                  value={heroImagePosition}
-                  onChange={(e) => handlePositionChange(e.target.value)}
-                  className="h-10 w-full sm:w-64 rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none transition focus:border-neutral-900"
-                >
-                  <option value="center top">Atas (Top)</option>
-                  <option value="center center">Tengah (Center)</option>
-                  <option value="center bottom">Bawah (Bottom)</option>
-                  <option value="left center">Kiri Tengah (Left)</option>
-                  <option value="right center">Kanan Tengah (Right)</option>
-                  <option value="50% 35%">Custom (Agak Atas)</option>
-                </select>
-              </label>
+                <p className="text-sm font-mono text-neutral-700">
+                  {heroImagePosition}
+                </p>
+                <div className="flex gap-2 mt-1">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="h-7 px-3 text-[10px] rounded-lg border-neutral-300"
+                    onClick={() => { 
+                      setDragPos({x:50,y:50}); 
+                      setHeroImagePosition("50% 50%"); 
+                      void handlePositionChange("50% 50%") 
+                    }}
+                  >
+                    Reset Tengah
+                  </Button>
+                </div>
+              </div>
 
               <Button
                 disabled={saving || loading}
