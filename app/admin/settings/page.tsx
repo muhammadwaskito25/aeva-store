@@ -7,7 +7,7 @@ import { LogOut, Upload, Loader2, Plus, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
-import type { HeroSlide } from "@/lib/siteSettings"
+import type { HeroSlide, HomeSettings } from "@/lib/siteSettings"
 
 export default function AdminSettingsPage() {
   const router = useRouter()
@@ -19,6 +19,15 @@ export default function AdminSettingsPage() {
   const [error, setError] = useState<string | null>(null)
 
   const [slides, setSlides] = useState<HeroSlide[]>([])
+  
+  const [homeText, setHomeText] = useState<HomeSettings>({
+    home_hero_subtitle: "",
+    home_hero_title: "",
+    home_hero_text: "",
+    home_featured_subtitle: "",
+    home_featured_title: "",
+    home_featured_text: "",
+  })
   
   // Dragging state
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
@@ -72,19 +81,27 @@ export default function AdminSettingsPage() {
             const parsed = JSON.parse(data.hero_slides) as HeroSlide[]
             if (Array.isArray(parsed) && parsed.length > 0) {
               setSlides(parsed)
-              return
             }
           } catch (e) {
             console.error(e)
           }
+        } else {
+          // Fallback
+          setSlides([{
+            id: "default-slide",
+            url: data.hero_image_url || "/hero.png",
+            position: data.hero_image_position || "50% 50%"
+          }])
         }
-        
-        // Fallback
-        setSlides([{
-          id: "default-slide",
-          url: data.hero_image_url || "/hero.png",
-          position: data.hero_image_position || "50% 50%"
-        }])
+
+        setHomeText({
+          home_hero_subtitle: data.home_hero_subtitle || "Solids Viscose Series",
+          home_hero_title: data.home_hero_title || "Quiet Luxury,\nGentle Drape",
+          home_hero_text: data.home_hero_text || "A curated line of refined, soft scarves and modestwear essentials crafted for understated elegance in daily rituals.",
+          home_featured_subtitle: data.home_featured_subtitle || "SOLIDS VISCOSE COLLECTION",
+          home_featured_title: data.home_featured_title || "Featured Pieces",
+          home_featured_text: data.home_featured_text || "Timeless silhouettes designed in a soft neutral palette to layer and mix seamlessly.",
+        })
       }
     } catch (err) {
       console.error(err)
@@ -97,6 +114,29 @@ export default function AdminSettingsPage() {
     const supabase = createSupabaseBrowserClient()
     await supabase.auth.signOut()
     router.push("/admin/login")
+  }
+
+  async function handleSaveText(key: keyof HomeSettings, value: string) {
+    setSaving(true)
+    setError(null)
+    setMessage(null)
+
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, value })
+      })
+
+      if (!res.ok) throw new Error("Gagal menyimpan ke database.")
+
+      setHomeText(prev => ({ ...prev, [key]: value }))
+      setMessage("Pengaturan teks berhasil disimpan.")
+    } catch (err: any) {
+      setError(err.message || "Gagal menyimpan teks.")
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function saveSlides(newSlides: HeroSlide[]) {
@@ -269,7 +309,50 @@ export default function AdminSettingsPage() {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
+      <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 space-y-8">
+        {/* HOMEPAGE TEXT */}
+        <section className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold tracking-tight">Teks Halaman Utama (Homepage)</h2>
+          <p className="mt-1 mb-6 text-sm text-neutral-500">
+            Ganti tulisan-tulisan yang muncul di halaman beranda.
+          </p>
+
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium border-b border-neutral-100 pb-2">Bagian Hero (Atas)</h3>
+              <div>
+                <label className="mb-2 block text-[11px] font-medium tracking-[0.14em] uppercase text-neutral-500">Subtitle Hero</label>
+                <input type="text" value={homeText.home_hero_subtitle} onChange={(e) => setHomeText({ ...homeText, home_hero_subtitle: e.target.value })} onBlur={() => handleSaveText("home_hero_subtitle", homeText.home_hero_subtitle)} className="h-10 w-full rounded-xl border border-neutral-200 px-3 text-sm outline-none transition focus:border-neutral-900" />
+              </div>
+              <div>
+                <label className="mb-2 block text-[11px] font-medium tracking-[0.14em] uppercase text-neutral-500">Judul Hero</label>
+                <textarea rows={2} value={homeText.home_hero_title} onChange={(e) => setHomeText({ ...homeText, home_hero_title: e.target.value })} onBlur={() => handleSaveText("home_hero_title", homeText.home_hero_title)} className="w-full rounded-xl border border-neutral-200 p-3 text-sm outline-none transition focus:border-neutral-900" />
+              </div>
+              <div>
+                <label className="mb-2 block text-[11px] font-medium tracking-[0.14em] uppercase text-neutral-500">Teks Deskripsi Hero</label>
+                <textarea rows={3} value={homeText.home_hero_text} onChange={(e) => setHomeText({ ...homeText, home_hero_text: e.target.value })} onBlur={() => handleSaveText("home_hero_text", homeText.home_hero_text)} className="w-full rounded-xl border border-neutral-200 p-3 text-sm outline-none transition focus:border-neutral-900" />
+              </div>
+            </div>
+
+            <div className="space-y-4 pt-4">
+              <h3 className="text-sm font-medium border-b border-neutral-100 pb-2">Bagian Featured (Bawah)</h3>
+              <div>
+                <label className="mb-2 block text-[11px] font-medium tracking-[0.14em] uppercase text-neutral-500">Subtitle Featured</label>
+                <input type="text" value={homeText.home_featured_subtitle} onChange={(e) => setHomeText({ ...homeText, home_featured_subtitle: e.target.value })} onBlur={() => handleSaveText("home_featured_subtitle", homeText.home_featured_subtitle)} className="h-10 w-full rounded-xl border border-neutral-200 px-3 text-sm outline-none transition focus:border-neutral-900" />
+              </div>
+              <div>
+                <label className="mb-2 block text-[11px] font-medium tracking-[0.14em] uppercase text-neutral-500">Judul Featured</label>
+                <input type="text" value={homeText.home_featured_title} onChange={(e) => setHomeText({ ...homeText, home_featured_title: e.target.value })} onBlur={() => handleSaveText("home_featured_title", homeText.home_featured_title)} className="h-10 w-full rounded-xl border border-neutral-200 px-3 text-sm outline-none transition focus:border-neutral-900" />
+              </div>
+              <div>
+                <label className="mb-2 block text-[11px] font-medium tracking-[0.14em] uppercase text-neutral-500">Teks Deskripsi Featured</label>
+                <textarea rows={2} value={homeText.home_featured_text} onChange={(e) => setHomeText({ ...homeText, home_featured_text: e.target.value })} onBlur={() => handleSaveText("home_featured_text", homeText.home_featured_text)} className="w-full rounded-xl border border-neutral-200 p-3 text-sm outline-none transition focus:border-neutral-900" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* HERO SLIDER */}
         <section className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <div>

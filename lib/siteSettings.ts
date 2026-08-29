@@ -49,6 +49,28 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
   ]
 }
 
+export type HomeSettings = {
+  home_hero_subtitle: string
+  home_hero_title: string
+  home_hero_text: string
+  home_featured_subtitle: string
+  home_featured_title: string
+  home_featured_text: string
+}
+
+export async function getHomeSettings(): Promise<HomeSettings> {
+  const settings = await getSiteSettings()
+  
+  return {
+    home_hero_subtitle: settings.home_hero_subtitle || "Solids Viscose Series",
+    home_hero_title: settings.home_hero_title || "Quiet Luxury,\nGentle Drape",
+    home_hero_text: settings.home_hero_text || "A curated line of refined, soft scarves and modestwear essentials crafted for understated elegance in daily rituals.",
+    home_featured_subtitle: settings.home_featured_subtitle || "SOLIDS VISCOSE COLLECTION",
+    home_featured_title: settings.home_featured_title || "Featured Pieces",
+    home_featured_text: settings.home_featured_text || "Timeless silhouettes designed in a soft neutral palette to layer and mix seamlessly.",
+  }
+}
+
 export type AboutValue = {
   id: string
   title: string

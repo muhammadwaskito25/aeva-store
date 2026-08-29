@@ -21,14 +21,15 @@ import {
 } from "@/lib/products"
 import { useCart } from "@/lib/cart"
 
-import type { HeroSlide } from "@/lib/siteSettings"
+import type { HeroSlide, HomeSettings } from "@/lib/siteSettings"
 
 type HomePageProps = {
   featuredProducts: Product[]
   heroSlides: HeroSlide[]
+  settings: HomeSettings
 }
 
-export function HomePage({ featuredProducts, heroSlides }: HomePageProps) {
+export function HomePage({ featuredProducts, heroSlides, settings }: HomePageProps) {
   const { addToCart, openCart } = useCart()
 
   const handleAddToCart = (product: Product) => {
@@ -45,12 +46,6 @@ export function HomePage({ featuredProducts, heroSlides }: HomePageProps) {
     }, 5000)
     return () => clearInterval(timer)
   }, [heroSlides])
-
-  const currentHero = heroSlides?.[currentSlide] || {
-    id: "default",
-    url: "/hero.png",
-    position: "center center",
-  }
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f8f5ef] text-neutral-900">
@@ -88,17 +83,13 @@ export function HomePage({ featuredProducts, heroSlides }: HomePageProps) {
         <FadeIn className="relative z-10 space-y-2 sm:space-y-8 px-4 max-w-3xl mx-auto mt-0">
           <div className="space-y-1 sm:space-y-4">
             <p className="text-[8px] sm:text-[11px] font-semibold tracking-[0.3em] uppercase text-white drop-shadow-md">
-              Solids Viscose Series
+              {settings.home_hero_subtitle}
             </p>
-            <h1 className="font-heading text-xl leading-[1.1] tracking-tight sm:text-5xl lg:text-7xl text-white drop-shadow-lg">
-              Quiet Luxury,
-              <br className="hidden sm:block" />
-              <span className="sm:hidden"> </span>
-              Gentle Drape
+            <h1 className="font-heading text-xl leading-[1.1] tracking-tight sm:text-5xl lg:text-7xl text-white drop-shadow-lg whitespace-pre-wrap">
+              {settings.home_hero_title}
             </h1>
-            <p className="max-w-lg mx-auto text-xs sm:text-base leading-relaxed text-white/90 drop-shadow-md hidden sm:block">
-              A curated line of refined, soft scarves and modestwear essentials
-              crafted for understated elegance in daily rituals.
+            <p className="max-w-lg mx-auto text-xs sm:text-base leading-relaxed text-white/90 drop-shadow-md hidden sm:block whitespace-pre-wrap">
+              {settings.home_hero_text}
             </p>
           </div>
 
@@ -144,15 +135,14 @@ export function HomePage({ featuredProducts, heroSlides }: HomePageProps) {
           <FadeIn className="mb-10 flex flex-col gap-3.5 sm:mb-16 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
             <div className="space-y-2.5 sm:space-y-3">
               <p className="text-[11px] font-medium tracking-[0.24em] uppercase text-neutral-500">
-                Solids Viscose Collection
+                {settings.home_featured_subtitle}
               </p>
               <h2 className="font-heading text-3xl tracking-tight sm:text-4xl">
-                Featured Pieces
+                {settings.home_featured_title}
               </h2>
             </div>
-            <p className="max-w-sm text-sm leading-relaxed text-neutral-600">
-              Timeless silhouettes designed in a soft neutral palette to layer and
-              mix seamlessly.
+            <p className="max-w-sm text-sm leading-relaxed text-neutral-600 whitespace-pre-wrap">
+              {settings.home_featured_text}
             </p>
           </FadeIn>
 
