@@ -58,7 +58,7 @@ export function HomePage({ featuredProducts, heroSlides }: HomePageProps) {
 
       <section
         id="home"
-        className="relative w-full aspect-[16/9] max-h-[70vh] min-h-[500px] overflow-hidden bg-[#ebe6dc] flex items-center justify-center text-center"
+        className="relative w-full aspect-[16/9] max-h-[70vh] min-h-[250px] md:min-h-[500px] overflow-hidden bg-[#ebe6dc] flex items-center justify-center text-center"
       >
         {/* Background Images */}
         <div className="absolute inset-0 z-0">
@@ -85,33 +85,34 @@ export function HomePage({ featuredProducts, heroSlides }: HomePageProps) {
         </div>
 
         {/* Text Content Overlay */}
-        <FadeIn className="relative z-10 space-y-6 sm:space-y-8 px-4 max-w-3xl mx-auto mt-16 md:mt-0">
-          <div className="space-y-3 sm:space-y-4">
-            <p className="text-[11px] font-semibold tracking-[0.3em] uppercase text-white drop-shadow-md">
+        <FadeIn className="relative z-10 space-y-4 sm:space-y-8 px-4 max-w-3xl mx-auto mt-8 md:mt-0">
+          <div className="space-y-2 sm:space-y-4">
+            <p className="text-[9px] sm:text-[11px] font-semibold tracking-[0.3em] uppercase text-white drop-shadow-md">
               Solids Viscose Series
             </p>
-            <h1 className="font-heading text-4xl leading-[1.1] tracking-tight sm:text-5xl lg:text-7xl text-white drop-shadow-lg">
+            <h1 className="font-heading text-3xl leading-[1.1] tracking-tight sm:text-5xl lg:text-7xl text-white drop-shadow-lg">
               Quiet Luxury,
-              <br />
+              <br className="hidden sm:block" />
+              <span className="sm:hidden"> </span>
               Gentle Drape
             </h1>
-            <p className="max-w-lg mx-auto text-sm leading-relaxed text-white/90 sm:text-base drop-shadow-md">
+            <p className="max-w-lg mx-auto text-xs sm:text-base leading-relaxed text-white/90 drop-shadow-md hidden sm:block">
               A curated line of refined, soft scarves and modestwear essentials
               crafted for understated elegance in daily rituals.
             </p>
           </div>
 
-          <motion.div variants={fadeUp}>
+          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mt-2 sm:mt-4">
             <Button
               asChild
-              className="mt-4 h-12 rounded-none bg-white px-8 text-xs font-semibold tracking-[0.16em] text-neutral-900 transition-colors hover:bg-neutral-100 uppercase"
+              className="h-9 sm:h-12 w-full sm:w-auto rounded-none bg-white px-6 sm:px-8 text-[10px] sm:text-xs font-semibold tracking-[0.16em] text-neutral-900 transition-colors hover:bg-neutral-100 uppercase"
             >
               <Link href="/products">Shop The Collection</Link>
             </Button>
             <Button
               asChild
               variant="outline"
-              className="mt-4 ml-4 h-12 rounded-none border-white/40 bg-transparent px-8 text-xs font-semibold tracking-[0.16em] text-white transition-colors hover:bg-white/10 uppercase"
+              className="h-9 sm:h-12 w-full sm:w-auto rounded-none border-white/40 bg-transparent px-6 sm:px-8 text-[10px] sm:text-xs font-semibold tracking-[0.16em] text-white transition-colors hover:bg-white/10 uppercase"
             >
               <Link href="/about">Our Story</Link>
             </Button>
